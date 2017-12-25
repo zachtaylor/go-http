@@ -42,3 +42,21 @@ func (session *Session) Revoke() {
 func (session *Session) WriteCookie(w http.ResponseWriter) {
 	w.Header().Set("Set-Cookie", "SessionId="+strconv.Itoa(int(session.Id))+"; Path=/;")
 }
+
+func Watch() {
+	for now := range time.Tick(1 * time.Second) {
+		revokelist := make([]uint, 0)
+
+		for sessionId, session := range Cache {
+			if session.Expire.Before(now) {
+				revokelist = append(revokelist, sessionId)
+			}
+		}
+
+		for _, sessionId := range revokelist {
+			if session := Cache[sessionId]; session != nil {
+				session.Revoke()
+			}
+		}
+	}
+}

@@ -1,26 +1,23 @@
 package httptrack
 
 import (
-	// "net/http"
 	"sync"
 	"ztaylor.me/log"
 )
 
 var lock = sync.Mutex{}
-
-var mem = make(map[string]bool)
+var witness = make(map[string]bool)
+var names = make(map[string]string)
 
 func Witness(addr string) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	if !mem[addr] {
-		mem[addr] = true
+	if !witness[addr] {
+		witness[addr] = true
 		log.Add("Addr", addr).Debug("httptrack: new customer")
 	}
 }
-
-var names = make(map[string]string)
 
 func Match(name string) []string {
 	lock.Lock()
@@ -39,7 +36,9 @@ func Match(name string) []string {
 func Link(name string, addr string) {
 	lock.Lock()
 	defer lock.Unlock()
-	names[name] = addr
-	names[addr] = name
-
+	if names[addr] == "" || names[name] == "" || names[name] != addr {
+		names[name] = addr
+		names[addr] = name
+		log.Add("Addr", addr).Add("Username", name).Debug("httptrack: new ip account pair")
+	}
 }
