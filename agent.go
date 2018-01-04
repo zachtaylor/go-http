@@ -5,7 +5,7 @@ import (
 )
 
 type Agent interface {
-	Metadata() json.Json
+	Name() string
 	Write(string)
 	WriteJson(json.Json)
 }

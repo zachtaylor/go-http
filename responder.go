@@ -1,15 +1,11 @@
 package http
 
-type Responder interface {
-	Respond(Agent, *Request) error
-}
+import "net/http"
 
-type ResponderFunc func(Agent, *Request) error
+type ResponderFunc func(*Request) error
 
-func (f ResponderFunc) Respond(a Agent, r *Request) error {
-	return f(a, r)
-}
-
-func NewResponder(f ResponderFunc) Responder {
-	return f
+func Responder(f ResponderFunc) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		f(RequestFromNet(r, w))
+	})
 }

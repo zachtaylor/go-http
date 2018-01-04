@@ -11,8 +11,7 @@ var SocketHandler = websocket.Handler(func(conn *websocket.Conn) {
 	socket := Open(conn)
 
 	if session, _ := ReadRequestCookie(conn.Request()); session != nil {
-		socket.mdat["SessionId"] = session.Id
-		socket.mdat["Username"] = session.Username
+		socket.Session = session
 		log.Add("SessionId", session.Id).Add("Username", session.Username).Info("http.sockets: session match")
 	}
 

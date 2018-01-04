@@ -12,10 +12,3 @@ type SocketMessage struct {
 func NewSocketMessage() *SocketMessage {
 	return &SocketMessage{"", json.Json{}}
 }
-
-func (msg *SocketMessage) Request(user string) *Request {
-	return &Request{
-		Quest: msg.Uri,
-		Data:  msg.Data,
-	}
-}

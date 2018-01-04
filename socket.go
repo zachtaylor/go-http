@@ -2,26 +2,28 @@ package http
 
 import (
 	"golang.org/x/net/websocket"
+	"ztaylor.me/events"
 	"ztaylor.me/json"
 	"ztaylor.me/log"
 )
 
 type Socket struct {
+	name string
 	conn *websocket.Conn
-	mdat json.Json
 	done chan interface{}
+	*Session
 }
 
 func Open(conn *websocket.Conn) *Socket {
 	return &Socket{
+		name: conn.RemoteAddr().String(),
 		conn: conn,
-		mdat: json.Json{},
 		done: make(chan interface{}),
 	}
 }
 
-func (socket *Socket) Metadata() json.Json {
-	return socket.mdat
+func (socket *Socket) Name() string {
+	return socket.name
 }
 
 func (socket *Socket) Write(s string) {
@@ -40,11 +42,12 @@ func (socket *Socket) Watch() {
 	for socket.conn != nil {
 		select {
 		case <-socket.done:
-			log.Add("", "").Debug("sockets: done")
+			log.Debug("socket done")
 			socket.conn = nil
-		case msg := <-socket.Listen():
-			if msg != nil {
-				go Dispatch(socket, msg)
+		case req := <-socket.Listen():
+			if req != nil {
+				go Dispatch(req)
+				events.Fire("WebsocketRequest", req)
 			} else {
 				close(socket.done)
 			}
@@ -60,10 +63,10 @@ func (socket *Socket) Listen() chan *Request {
 		if err != nil {
 			receiver <- nil
 			if err.Error() != "EOF" {
-				log.Add("Error", err).Error("sockets: receive")
+				log.Add("Error", err).Error("socket receive")
 			}
 		} else {
-			log.Debug("sockets: receive")
+			log.Debug("socket receive")
 			receiver <- RequestFromSocketMessage(msg, socket)
 		}
 		close(receiver)

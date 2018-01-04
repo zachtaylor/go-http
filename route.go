@@ -1,10 +1,26 @@
 package http
 
+import (
+	"net/http"
+	"ztaylor.me/log"
+)
+
 type Route interface {
 	Match(string) bool
-	Responder
+	http.Handler
+	Respond(*Request) error
 }
 
-func Map(s string, f ResponderFunc) {
-	router = append(router, &LiteralRoute{s, f})
+type route struct {
+	ResponderFunc
+}
+
+func (route *route) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := route.ResponderFunc(RequestFromNet(r, w)); err != nil {
+		log.Error(err)
+	}
+}
+
+func (route *route) Respond(r *Request) error {
+	return route.ResponderFunc(r)
 }
