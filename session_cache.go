@@ -24,7 +24,7 @@ func Get(username string) *Session {
 }
 
 func Grant(username string, lifetime time.Duration) *Session {
-	session := New(lifetime)
+	session := NewSession(lifetime)
 	session.Username = username
 	SessionCache[session.Id] = session
 	events.Fire("SessionGrant", session)

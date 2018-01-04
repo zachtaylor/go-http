@@ -20,7 +20,7 @@ type Session struct {
 	lifetime time.Duration
 }
 
-func New(lifetime time.Duration) *Session {
+func NewSession(lifetime time.Duration) *Session {
 	return &Session{
 		Id:       uint(sessionIdGen.Next()),
 		Expire:   time.Now().Add(lifetime),
