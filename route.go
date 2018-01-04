@@ -12,7 +12,7 @@ type Route interface {
 }
 
 type route struct {
-	ResponderFunc
+	ResponderFunc func(*Request) error
 }
 
 func (route *route) ServeHTTP(w http.ResponseWriter, r *http.Request) {

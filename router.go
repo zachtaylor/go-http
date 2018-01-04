@@ -10,10 +10,10 @@ var router = make([]Route, 0)
 func Router(r Route) {
 	router = append(router, r)
 }
-func MapRoute(s string, f ResponderFunc) {
+func MapRoute(s string, f func(*Request) error) {
 	Router(NewRouteLiteral(s, f))
 }
-func MapRegex(s string, f ResponderFunc) {
+func MapRegex(s string, f func(*Request) error) {
 	Router(NewRouteRegex(s, f))
 }
 func MapRaw(s string, h http.Handler) {

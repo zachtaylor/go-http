@@ -5,7 +5,7 @@ type LiteralRoute struct {
 	Path string
 }
 
-func NewRouteLiteral(path string, r ResponderFunc) Route {
+func NewRouteLiteral(path string, r func(*Request) error) Route {
 	return &LiteralRoute{
 		route: route{r},
 		Path:  path,

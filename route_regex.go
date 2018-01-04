@@ -9,7 +9,7 @@ type RegexRoute struct {
 	*regexp.Regexp
 }
 
-func NewRouteRegex(s string, r ResponderFunc) Route {
+func NewRouteRegex(s string, r func(*Request) error) Route {
 	return &RegexRoute{
 		route:  route{r},
 		Regexp: regexp.MustCompile(s),
