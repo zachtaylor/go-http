@@ -6,12 +6,13 @@ import (
 )
 
 type Route interface {
-	Match(string) bool
+	Matcher
 	http.Handler
 	Respond(*Request) error
 }
 
 type route struct {
+	Matcher
 	ResponderFunc func(*Request) error
 }
 
