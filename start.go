@@ -6,7 +6,7 @@ import (
 )
 
 func Start(port string) {
-	log.Error(http.ListenAndServe(":"+port, Server))
+	log.Error(http.ListenAndServe(port, Server))
 }
 
 func StartTLS(cert string, key string) {
