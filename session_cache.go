@@ -20,6 +20,10 @@ func SessionCount() int {
 	return len(sessionCache)
 }
 
+func SessionId(i uint) *Session {
+	return sessionCache[i]
+}
+
 func GetSession(username string) *Session {
 	sessionCacheLock.Lock()
 	for _, session := range sessionCache {
