@@ -45,6 +45,7 @@ func (socket *Socket) Watch() {
 		case <-socket.done:
 			log.Debug("socket done")
 			socket.conn = nil
+			return
 		case req := <-socket.Listen():
 			if req != nil {
 				go Dispatch(req)
