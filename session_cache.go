@@ -4,43 +4,57 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 	"ztaylor.me/events"
 )
 
-var SessionCache = make(map[uint]*Session)
+var sessionCache = make(map[uint]*Session)
+var sessionCacheLock sync.Mutex
 
 func init() {
 	go watch()
 }
 
-func Get(username string) *Session {
-	for _, session := range SessionCache {
+func SessionCount() int {
+	return len(sessionCache)
+}
+
+func GetSession(username string) *Session {
+	sessionCacheLock.Lock()
+	for _, session := range sessionCache {
 		if username == session.Username {
+			sessionCacheLock.Unlock()
 			return session
 		}
 	}
+	sessionCacheLock.Unlock()
 	return nil
 }
 
-func Grant(username string, lifetime time.Duration) *Session {
-	session := NewSession(lifetime)
+func GrantSession(username string) *Session {
+	session := NewSession()
 	session.Username = username
-	SessionCache[session.Id] = session
+	sessionCache[session.Id] = session
 	events.Fire("SessionGrant", session)
 	return session
 }
 
-func Revoke(username string) {
-	if session := Get(username); session != nil {
-		session.Revoke()
+func RevokeSession(username string) {
+	if session := GetSession(username); session != nil {
+		sessionCacheLock.Lock()
+		delete(sessionCache, session.Id)
+		sessionCacheLock.Unlock()
+		if session.Expire.After(time.Now()) {
+			session.Close()
+		}
 	}
 }
 
 func ReadRequestCookie(r *http.Request) (*Session, error) {
 	if sessionCookie, err := r.Cookie("SessionId"); err == nil {
 		if sessionId, err := strconv.ParseInt(sessionCookie.Value, 10, 0); err == nil {
-			if session := SessionCache[uint(sessionId)]; session != nil {
+			if session := sessionCache[uint(sessionId)]; session != nil {
 				return session, nil
 			} else if sessionId == 0 {
 				return nil, nil
@@ -61,18 +75,16 @@ func EraseSessionId(w http.ResponseWriter) {
 
 func watch() {
 	for now := range time.Tick(1 * time.Second) {
-		revokelist := make([]uint, 0)
+		revokelist := make([]string, 0)
 
-		for sessionId, session := range SessionCache {
+		for _, session := range sessionCache {
 			if session.Expire.Before(now) {
-				revokelist = append(revokelist, sessionId)
+				revokelist = append(revokelist, session.Username)
 			}
 		}
 
-		for _, sessionId := range revokelist {
-			if session := SessionCache[sessionId]; session != nil {
-				session.Revoke()
-			}
+		for _, username := range revokelist {
+			RevokeSession(username)
 		}
 	}
 }

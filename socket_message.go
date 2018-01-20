@@ -8,7 +8,3 @@ type SocketMessage struct {
 	Uri  string
 	Data json.Json
 }
-
-func NewSocketMessage() *SocketMessage {
-	return &SocketMessage{"", json.Json{}}
-}

@@ -11,7 +11,10 @@ type NetHttpAgent struct {
 }
 
 func AgentFromNetHttp(r *http.Request, w http.ResponseWriter) Agent {
-	return &NetHttpAgent{r.UserAgent(), w}
+	return &NetHttpAgent{
+		name:           r.Method + "://" + r.RemoteAddr,
+		ResponseWriter: w,
+	}
 }
 
 func (a *NetHttpAgent) Name() string {

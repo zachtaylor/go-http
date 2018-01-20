@@ -10,6 +10,7 @@ import (
 )
 
 var sessionIdGen, _ = mathutil.NewFC32(0, 999999999, true)
+var SessionLifetime = 1 * time.Hour
 
 type Session struct {
 	Id       uint
@@ -17,26 +18,26 @@ type Session struct {
 	Expire   time.Time
 	Done     chan error
 	sync.Mutex
-	lifetime time.Duration
 }
 
-func NewSession(lifetime time.Duration) *Session {
+func NewSession() *Session {
 	return &Session{
-		Id:       uint(sessionIdGen.Next()),
-		Expire:   time.Now().Add(lifetime),
-		lifetime: lifetime,
-		Done:     make(chan error),
+		Id:     uint(sessionIdGen.Next()),
+		Expire: time.Now().Add(SessionLifetime),
+		Done:   make(chan error),
 	}
 }
 
 func (session *Session) Refresh() {
-	session.Expire = time.Now().Add(session.lifetime)
+	session.Expire = time.Now().Add(SessionLifetime)
 }
 
-func (session *Session) Revoke() {
-	close(session.Done)
-	delete(SessionCache, session.Id)
-	events.Fire("SessionRevoke", session.Username)
+func (session *Session) Close() {
+	go func() {
+		session.Expire = time.Now()
+		close(session.Done)
+		events.Fire("SessionClose", session.Username)
+	}()
 }
 
 func (session *Session) WriteCookie(w http.ResponseWriter) {

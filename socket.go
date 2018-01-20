@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"golang.org/x/net/websocket"
 	"ztaylor.me/events"
 	"ztaylor.me/json"
@@ -16,7 +17,7 @@ type Socket struct {
 
 func Open(conn *websocket.Conn) *Socket {
 	return &Socket{
-		name: conn.RemoteAddr().String(),
+		name: "ws://" + conn.Request().RemoteAddr,
 		conn: conn,
 		done: make(chan interface{}),
 	}
@@ -58,17 +59,21 @@ func (socket *Socket) Watch() {
 func (socket *Socket) Listen() chan *Request {
 	receiver := make(chan *Request)
 	go func() {
-		msg := NewSocketMessage()
-		err := websocket.JSON.Receive(socket.conn, msg)
-		if err != nil {
-			receiver <- nil
+		s := bytes.NewBufferString("")
+		msg := SocketMessage{"", json.Json{}}
+		if err := websocket.Message.Receive(socket.conn, &s); err != nil {
 			if err.Error() != "EOF" {
 				log.Add("Error", err).Error("socket receive")
 			}
+			receiver <- nil
+		} else if err := json.NewDecoder(s).Decode(&msg); err != nil {
+			log.Add("Error", err).Add("Val", s).Error("socket receive decode")
+			receiver <- nil
 		} else {
-			log.Debug("socket receive")
-			receiver <- RequestFromSocketMessage(msg, socket)
+			log.Add("Uri", msg.Uri).Add("Username", socket.Username).Debug("socket receive")
+			receiver <- RequestFromSocketMessage(&msg, socket)
 		}
+
 		close(receiver)
 	}()
 	return receiver
