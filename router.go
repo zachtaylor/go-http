@@ -32,6 +32,8 @@ func Dispatch(r *Request) {
 				"Quest":   r.Quest,
 				"Session": r.Session,
 			}).Error("dispatch respond error")
+		} else {
+			return
 		}
 	}
 }

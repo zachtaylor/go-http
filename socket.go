@@ -11,7 +11,6 @@ import (
 type Socket struct {
 	name string
 	conn *websocket.Conn
-	done chan interface{}
 	*Session
 }
 
@@ -19,7 +18,6 @@ func Open(conn *websocket.Conn) *Socket {
 	return &Socket{
 		name: "ws://" + conn.Request().RemoteAddr,
 		conn: conn,
-		done: make(chan interface{}),
 	}
 }
 
@@ -40,19 +38,14 @@ func (socket *Socket) WriteJson(json json.Json) {
 }
 
 func (socket *Socket) Watch() {
-	for socket.conn != nil {
-		select {
-		case <-socket.done:
-			log.Debug("socket done")
-			socket.conn = nil
+	for {
+		req := <-socket.Listen()
+		if req != nil {
+			Dispatch(req)
+			events.Fire("WebsocketRequest", req)
+		} else {
+			log.Add("Name", socket.name).Debug("http/socket: done")
 			return
-		case req := <-socket.Listen():
-			if req != nil {
-				go Dispatch(req)
-				events.Fire("WebsocketRequest", req)
-			} else {
-				close(socket.done)
-			}
 		}
 	}
 }
@@ -60,18 +53,20 @@ func (socket *Socket) Watch() {
 func (socket *Socket) Listen() chan *Request {
 	receiver := make(chan *Request)
 	go func() {
-		s := bytes.NewBufferString("")
+		s := ""
 		msg := SocketMessage{"", json.Json{}}
-		if err := websocket.Message.Receive(socket.conn, &s); err != nil {
+		if socket == nil {
+			log.Warn("listen to nil socket")
+		} else if err := websocket.Message.Receive(socket.conn, &s); err != nil {
 			if err.Error() != "EOF" {
-				log.Add("Error", err).Error("socket receive")
+				log.Add("Error", err).Error("http/socket: receive error")
 			}
 			receiver <- nil
-		} else if err := json.NewDecoder(s).Decode(&msg); err != nil {
-			log.Add("Error", err).Add("Val", s).Error("socket receive decode")
+		} else if err := json.NewDecoder(bytes.NewBufferString(s)).Decode(&msg); err != nil {
+			log.Add("Error", err).Add("Val", s).Error("http/socket: receive decode error")
 			receiver <- nil
 		} else {
-			log.Add("Uri", msg.Uri).Add("Username", socket.Username).Debug("socket receive")
+			log.Add("Uri", msg.Uri).Debug("http/socket: receive")
 			receiver <- RequestFromSocketMessage(&msg, socket)
 		}
 

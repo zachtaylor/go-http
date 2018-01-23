@@ -7,12 +7,12 @@ import (
 )
 
 var SocketHandler = websocket.Handler(func(conn *websocket.Conn) {
-	log.Add("RemoteAddr", conn.Request().RemoteAddr).Debug("http.sockets: open")
+	log.Add("RemoteAddr", conn.Request().RemoteAddr).Debug("http/socket: open")
 	socket := Open(conn)
 
 	if session, _ := ReadRequestCookie(conn.Request()); session != nil {
 		socket.Session = session
-		log.Add("SessionId", session.Id).Add("Username", session.Username).Info("http.sockets: session match")
+		log.Add("SessionId", session.Id).Add("Username", session.Username).Info("http/socket: session match")
 	}
 
 	events.Fire("WebsocketOpen", socket)
