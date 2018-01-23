@@ -26,14 +26,15 @@ func MapRawRgx(s string, h http.Handler) {
 func Dispatch(r *Request) {
 	for _, route := range router {
 		if !route.Match(r.Quest) {
-		} else if err := route.Respond(r); err != nil {
+			continue
+		}
+		if err := route.Respond(r); err != nil && err != ErrRespondPathRaw {
 			log.WithFields(log.Fields{
 				"Error":   err,
 				"Quest":   r.Quest,
 				"Session": r.Session,
 			}).Error("dispatch respond error")
-		} else {
-			return
 		}
+		return
 	}
 }
