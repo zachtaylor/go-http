@@ -55,6 +55,7 @@ func (socket *Socket) Listen() chan *Request {
 	go func() {
 		s := ""
 		msg := SocketMessage{"", json.Json{}}
+		log := log.Add("Session", socket.Session)
 		if socket == nil {
 			log.Warn("listen to nil socket")
 		} else if err := websocket.Message.Receive(socket.conn, &s); err != nil {
