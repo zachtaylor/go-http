@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 	"strings"
-	"ztaylor.me/json"
+	"ztaylor.me/js"
 	"ztaylor.me/log"
 )
 
@@ -11,7 +11,7 @@ type Request struct {
 	Quest    string
 	Remote   string
 	Language string
-	Data     json.Json
+	Data     js.Object
 	*Session
 	Agent
 }
@@ -19,7 +19,7 @@ type Request struct {
 func NewRequest() *Request {
 	return &Request{
 		Language: "en-US",
-		Data:     json.Json{},
+		Data:     js.Object{},
 	}
 }
 

@@ -1,11 +1,11 @@
 package http
 
 import (
-	"ztaylor.me/json"
+	"ztaylor.me/js"
 )
 
 type Agent interface {
 	Name() string
 	Write(string)
-	WriteJson(json.Json)
+	WriteJson(js.Object)
 }

@@ -1,10 +1,10 @@
 package http
 
 import (
-	"ztaylor.me/json"
+	"ztaylor.me/js"
 )
 
 type SocketMessage struct {
 	Uri  string
-	Data json.Json
+	Data js.Object
 }

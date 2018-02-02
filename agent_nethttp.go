@@ -2,7 +2,7 @@ package http
 
 import (
 	"net/http"
-	"ztaylor.me/json"
+	"ztaylor.me/js"
 )
 
 type NetHttpAgent struct {
@@ -25,6 +25,6 @@ func (a *NetHttpAgent) Write(s string) {
 	a.ResponseWriter.Write([]byte(s))
 }
 
-func (a *NetHttpAgent) WriteJson(json json.Json) {
+func (a *NetHttpAgent) WriteJson(json js.Object) {
 	a.Write(json.String())
 }

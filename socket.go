@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"golang.org/x/net/websocket"
 	"ztaylor.me/events"
-	"ztaylor.me/json"
+	"ztaylor.me/js"
 	"ztaylor.me/log"
 )
 
@@ -26,12 +26,12 @@ func (socket *Socket) Name() string {
 }
 
 func (socket *Socket) Write(s string) {
-	socket.WriteJson(json.Json{
+	socket.WriteJson(js.Object{
 		"error": s,
 	})
 }
 
-func (socket *Socket) WriteJson(json json.Json) {
+func (socket *Socket) WriteJson(json js.Object) {
 	if socket.conn != nil {
 		websocket.Message.Send(socket.conn, json.String())
 	}
@@ -54,7 +54,7 @@ func (socket *Socket) Listen() chan *Request {
 	receiver := make(chan *Request)
 	go func() {
 		s := ""
-		msg := SocketMessage{"", json.Json{}}
+		msg := SocketMessage{"", js.Object{}}
 		log := log.Add("Session", socket.Session)
 		if socket == nil {
 			log.Warn("listen to nil socket")
@@ -63,7 +63,7 @@ func (socket *Socket) Listen() chan *Request {
 				log.Add("Error", err).Error("http/socket: receive error")
 			}
 			receiver <- nil
-		} else if err := json.NewDecoder(bytes.NewBufferString(s)).Decode(&msg); err != nil {
+		} else if err := js.NewDecoder(bytes.NewBufferString(s)).Decode(&msg); err != nil {
 			log.Add("Error", err).Add("Val", s).Error("http/socket: receive decode error")
 			receiver <- nil
 		} else {
