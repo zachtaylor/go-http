@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"github.com/cznic/mathutil"
 	"net/http"
 	"strconv"
@@ -42,4 +43,8 @@ func (session *Session) Close() {
 
 func (session *Session) WriteCookie(w http.ResponseWriter) {
 	w.Header().Set("Set-Cookie", "SessionId="+strconv.Itoa(int(session.Id))+"; Path=/;")
+}
+
+func (session Session) String() string {
+	return fmt.Sprintf("#%d:%s", session.Id, session.Username)
 }
