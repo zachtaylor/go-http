@@ -2,15 +2,14 @@ package http
 
 import (
 	"fmt"
-	"github.com/cznic/mathutil"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 	"ztaylor.me/events"
+	"ztaylor.me/log"
 )
 
-var sessionIdGen, _ = mathutil.NewFC32(0, 999999999, true)
 var SessionLifetime = 1 * time.Hour
 
 type Session struct {
@@ -21,24 +20,16 @@ type Session struct {
 	sync.Mutex
 }
 
-func NewSession() *Session {
-	return &Session{
-		Id:     uint(sessionIdGen.Next()),
-		Expire: time.Now().Add(SessionLifetime),
-		Done:   make(chan error),
-	}
-}
-
 func (session *Session) Refresh() {
 	session.Expire = time.Now().Add(SessionLifetime)
+	log.Add("Session", session).Debug("http/session: refresh")
 }
 
 func (session *Session) Close() {
-	go func() {
-		session.Expire = time.Now()
-		close(session.Done)
-		events.Fire("SessionClose", session.Username)
-	}()
+	session.Expire = time.Now()
+	close(session.Done)
+	log.Add("Session", session).Debug("http/session: close")
+	events.Fire("SessionClose", session.Username)
 }
 
 func (session *Session) WriteCookie(w http.ResponseWriter) {

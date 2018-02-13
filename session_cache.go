@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 	"ztaylor.me/events"
+	"ztaylor.me/log"
 )
 
 var sessionCache = make(map[uint]*Session)
@@ -37,9 +38,16 @@ func GetSession(username string) *Session {
 }
 
 func GrantSession(username string) *Session {
-	session := NewSession()
-	session.Username = username
+	session := &Session{
+		Id:       NewSessionId(),
+		Username: username,
+		Expire:   time.Now().Add(SessionLifetime),
+		Done:     make(chan error),
+	}
+	sessionCacheLock.Lock()
 	sessionCache[session.Id] = session
+	sessionCacheLock.Unlock()
+	log.Add("Session", session).Info("http/session: grant")
 	events.Fire("SessionGrant", session)
 	return session
 }
@@ -49,9 +57,8 @@ func RevokeSession(username string) {
 		sessionCacheLock.Lock()
 		delete(sessionCache, session.Id)
 		sessionCacheLock.Unlock()
-		if session.Expire.After(time.Now()) {
-			session.Close()
-		}
+		log.Add("Session", session).Info("http/session: revoke")
+		session.Close()
 	}
 }
 
