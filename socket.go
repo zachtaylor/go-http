@@ -17,15 +17,19 @@ type Socket struct {
 	name string
 	conn *websocket.Conn
 	*Session
+	events.Bus
 }
 
 type SocketSlice []*Socket
 
 func Open(conn *websocket.Conn) *Socket {
-	return &Socket{
+	s := &Socket{
 		name: "ws://" + conn.Request().RemoteAddr,
 		conn: conn,
+		Bus:  events.Bus{},
 	}
+	s.Bus.On(events.EVTfire, events.FireGlobal)
+	return s
 }
 
 func (socket *Socket) Name() string {
@@ -40,7 +44,7 @@ func (socket *Socket) Login(session *Session) {
 
 	socket.Session = session
 	StoreSocket(socket)
-	events.Fire(EVTsocket_login, session, socket)
+	socket.Fire(EVTsocket_login, session, socket)
 	log.Add("SessionId", session.Id).Add("Username", socket.Username).Info("http/socket: login")
 }
 
@@ -69,19 +73,19 @@ func (slice SocketSlice) WriteAllJson(json js.Object) {
 }
 
 func (socket *Socket) Watch() {
-	events.Fire(EVTsocket_open, socket)
+	socket.Fire(EVTsocket_open, socket)
 	for {
 		req := <-socket.Listener()
 		if req != nil {
 			Dispatch(req)
-			events.Fire(EVTsocket_receive, req)
+			socket.Fire(EVTsocket_receive, req)
 		} else {
 			log.Add("Name", socket.name).Debug("http/socket: done")
 			return
 		}
 	}
 	RemoveSocket(socket)
-	events.Fire(EVTsocket_close, socket)
+	socket.Fire(EVTsocket_close, socket)
 }
 
 func (socket *Socket) Listener() chan *Request {
