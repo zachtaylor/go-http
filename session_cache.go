@@ -21,8 +21,8 @@ func SessionCount() int {
 	return len(sessionCache)
 }
 
-func SessionId(i uint) *Session {
-	return sessionCache[i]
+func SessionCache(id uint) *Session {
+	return sessionCache[id]
 }
 
 func GetSession(username string) *Session {
