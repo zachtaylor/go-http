@@ -6,4 +6,4 @@ import (
 
 var FileServer = http.FileServer
 
-type Dir http.Dir
+type Dir = http.Dir
