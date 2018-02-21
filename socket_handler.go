@@ -6,7 +6,7 @@ import (
 )
 
 var SocketHandler = websocket.Handler(func(conn *websocket.Conn) {
-	log.Add("RemoteAddr", conn.Request().RemoteAddr).Debug("http/socket: open")
+	log.Add("Addr", conn.Request().RemoteAddr).Debug("http/socket: open")
 
 	socket := Open(conn)
 
