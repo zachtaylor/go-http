@@ -17,7 +17,6 @@ type Socket struct {
 	name string
 	conn *websocket.Conn
 	*Session
-	events.Bus
 }
 
 type SocketSlice []*Socket
@@ -26,9 +25,7 @@ func Open(conn *websocket.Conn) *Socket {
 	s := &Socket{
 		name: "ws://" + conn.Request().RemoteAddr,
 		conn: conn,
-		Bus:  events.Bus{},
 	}
-	s.Bus.On(events.EVTfire, events.FireGlobal)
 	return s
 }
 
@@ -44,7 +41,7 @@ func (socket *Socket) Login(session *Session) {
 
 	socket.Session = session
 	StoreSocket(socket)
-	socket.Fire(EVTsocket_login, session, socket)
+	events.Fire(EVTsocket_login, socket, session)
 	log.Add("Name", socket.Name()).Add("SessionId", session.Id).Add("Username", socket.Username).Info("http/socket: login")
 }
 
@@ -73,19 +70,19 @@ func (slice SocketSlice) WriteAllJson(json js.Object) {
 }
 
 func (socket *Socket) Watch() {
-	socket.Fire(EVTsocket_open, socket)
+	events.Fire(EVTsocket_open, socket)
 	for {
 		req := <-socket.Listener()
 		if req != nil {
 			Dispatch(req)
-			socket.Fire(EVTsocket_receive, req)
+			events.Fire(EVTsocket_receive, socket, req)
 		} else {
-			log.Add("Name", socket.name).Debug("http/socket: done")
-			return
+			log.Add("Name", socket.Name()).Debug("http/socket: done")
+			break
 		}
 	}
 	RemoveSocket(socket)
-	socket.Fire(EVTsocket_close, socket)
+	events.Fire(EVTsocket_close, socket)
 }
 
 func (socket *Socket) Listener() chan *Request {
@@ -93,17 +90,25 @@ func (socket *Socket) Listener() chan *Request {
 	go func() {
 		s := ""
 		msg := SocketMessage{"", js.Object{}}
-		log := log.Add("Session", socket.Session)
 		if socket == nil || socket.conn == nil {
-			log.Warn("http/socket: listen to nil socket")
+			log.Add("Name", socket.Name()).Warn("http/socket: listen socket is nil")
 		} else if err := websocket.Message.Receive(socket.conn, &s); err != nil {
 			if err.Error() != "EOF" {
 				log.Add("Error", err).Error("http/socket: receive error")
 			}
 		} else if err := js.NewDecoder(bytes.NewBufferString(s)).Decode(&msg); err != nil {
-			log.Add("Error", err).Add("Val", s).Error("http/socket: receive decode error")
+			log.WithFields(log.Fields{
+				"Name":    socket.Name(),
+				"Session": socket.Session,
+				"Val":     s,
+				"Error":   err,
+			}).Error("http/socket: receive decode error")
 		} else {
-			log.Add("Uri", msg.Uri).Debug("http/socket: receive")
+			log.WithFields(log.Fields{
+				"Name":    socket.Name(),
+				"Session": socket.Session,
+				"Uri":     msg.Uri,
+			}).Debug("http/socket: receive")
 			receiver <- RequestFromSocketMessage(&msg, socket)
 		}
 
