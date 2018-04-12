@@ -5,13 +5,13 @@ import (
 )
 
 type Matcher interface {
-	Match(string) bool
+	Match(*Request) bool
 }
 
-type StringMatcher string
+type QuestMatcher string
 
-func (s StringMatcher) Match(s2 string) bool {
-	return string(s) == s2
+func (quest QuestMatcher) Match(r *Request) bool {
+	return string(quest) == r.Quest
 }
 
 func RegexMatcher(s string) Matcher {
@@ -22,6 +22,6 @@ type regexMatcher struct {
 	*regexp.Regexp
 }
 
-func (r *regexMatcher) Match(s string) bool {
-	return r.MatchString(s)
+func (regex *regexMatcher) Match(r *Request) bool {
+	return regex.MatchString(r.Quest)
 }

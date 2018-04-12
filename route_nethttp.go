@@ -19,8 +19,8 @@ func NewRouteNetHttp(m Matcher, h http.Handler) Route {
 	}
 }
 
-func (route *NetHttpRoute) Match(s string) bool {
-	return route.Matcher.Match(s)
+func (route *NetHttpRoute) Match(r *Request) bool {
+	return route.Matcher.Match(r)
 }
 
 func (route *NetHttpRoute) ServeHTTP(w http.ResponseWriter, r *http.Request) {
