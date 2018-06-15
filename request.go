@@ -29,8 +29,8 @@ func RequestFromNet(r *http.Request, w http.ResponseWriter) *Request {
 	req.Remote = r.RemoteAddr[0:strings.LastIndex(r.RemoteAddr, ":")]
 	// req.Language = r.Header.Get("Accept-Language")[0:5]
 	req.Agent = AgentFromNetHttp(r, w)
-	if r.Header.Get("Accept-Language")[0:5] != "en-US" {
-		log.Add("Remote", req.Remote).Add("AcceptLanguage", r.Header.Get("Accept-Language")[0:5]).Add("Agent", req.Agent.Name()).Warn("/api/cards: ignore non-en-US language :(")
+	if acceptLang := r.Header.Get("Accept-Language"); len(acceptLang) < 5 || acceptLang[:5] != "en-US" {
+		log.Add("Remote", req.Remote).Add("AcceptLanguage", acceptLang).Add("Agent", req.Agent.Name()).Warn("/api/cards: request language failed")
 	}
 	for k, v := range r.Form {
 		req.Data[k] = v
