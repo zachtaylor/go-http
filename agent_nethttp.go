@@ -18,6 +18,10 @@ func AgentFromNetHttp(r *http.Request, w http.ResponseWriter) Agent {
 }
 
 func (a *NetHttpAgent) Name() string {
+	return a.String()
+}
+
+func (a NetHttpAgent) String() string {
 	return a.name
 }
 

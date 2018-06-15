@@ -30,6 +30,10 @@ func Open(conn *websocket.Conn) *Socket {
 }
 
 func (socket *Socket) Name() string {
+	return socket.String()
+}
+
+func (socket Socket) String() string {
 	return socket.name
 }
 
