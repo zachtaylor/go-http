@@ -6,35 +6,57 @@ import (
 	"ztaylor.me/log"
 )
 
-var router = make([]Route, 0)
-
-func Router(r Route) {
-	router = append(router, r)
-}
-func MapLit(s string, f func(*Request) error) {
-	Router(&route{QuestMatcher(s), f})
-}
-func MapRgx(s string, f func(*Request) error) {
-	Router(&route{RegexMatcher(s), f})
-}
-func MapRawLit(s string, h http.Handler) {
-	Router(NewRouteNetHttp(QuestMatcher(s), h))
-}
-func MapRawRgx(s string, h http.Handler) {
-	Router(NewRouteNetHttp(RegexMatcher(s), h))
+type Router struct {
+	routes []Route
 }
 
-func Dispatch(r *Request) {
-	for _, route := range router {
-		if !route.Match(r) {
+func (r *Router) AddRoute(route Route) {
+	r.routes = append(r.routes, route)
+}
+
+func (r *Router) MapLit(s string, f func(*Request) error) {
+	r.AddRoute(&ServiceRoute{QuestMatcher(s), f})
+}
+
+func (r *Router) MapRgx(s string, f func(*Request) error) {
+	r.AddRoute(&ServiceRoute{RegexMatcher(s), f})
+}
+
+func (r *Router) MapRawLit(s string, h http.Handler) {
+	r.AddRoute(&NetHttpRoute{QuestMatcher(s), h})
+}
+
+func (r *Router) MapRawRgx(s string, h http.Handler) {
+	r.AddRoute(&NetHttpRoute{RegexMatcher(s), h})
+}
+
+func NewRouter() *Router {
+	return &Router{
+		routes: make([]Route, 0),
+	}
+}
+
+func (r *Router) ServeHTTP(w http.ResponseWriter, q *http.Request) {
+	req := RequestFromNet(q, w)
+	for _, route := range r.routes {
+		if route.Match(req) {
+			route.ServeHTTP(w, q)
+			return
+		}
+	}
+}
+
+func (r *Router) Dispatch(q *Request) {
+	for _, route := range r.routes {
+		if !route.Match(q) {
 			continue
 		}
-		if err := route.Respond(r); err != nil && err != ErrRespondPathRaw {
+		if err := route.Respond(q); err != nil && err != ErrRespondPathRaw {
 			log.WithFields(log.Fields{
 				"Error":   err,
-				"Quest":   r.Quest,
-				"Agent":   r.Agent,
-				"Session": r.Session,
+				"Quest":   q.Quest,
+				"Agent":   q.Agent,
+				"Session": q.Session,
 			}).Error("dispatch respond error")
 		}
 		return

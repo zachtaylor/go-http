@@ -8,15 +8,8 @@ import (
 var ErrRespondPathRaw = errors.New("http path cannot respond outside http")
 
 type NetHttpRoute struct {
-	http.Handler
 	Matcher
-}
-
-func NewRouteNetHttp(m Matcher, h http.Handler) Route {
-	return &NetHttpRoute{
-		Handler: h,
-		Matcher: m,
-	}
+	http.Handler
 }
 
 func (route *NetHttpRoute) Match(r *Request) bool {
