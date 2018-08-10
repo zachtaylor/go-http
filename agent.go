@@ -1,8 +1,6 @@
 package http
 
-import (
-	"ztaylor.me/js"
-)
+import "ztaylor.me/js"
 
 type Agent interface {
 	Name() string

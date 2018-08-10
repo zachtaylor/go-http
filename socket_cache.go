@@ -1,8 +1,6 @@
 package http
 
-import (
-	"sync"
-)
+import "sync"
 
 var socketCache = make(map[string]*Socket)
 var socketCacheLock sync.Mutex

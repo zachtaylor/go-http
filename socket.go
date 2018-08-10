@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+
 	"golang.org/x/net/websocket"
 	"ztaylor.me/events"
 	"ztaylor.me/js"

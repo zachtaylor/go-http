@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
 	"ztaylor.me/events"
 	"ztaylor.me/log"
 )
