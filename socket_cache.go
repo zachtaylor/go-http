@@ -13,8 +13,8 @@ func SocketCache(id string) *Socket {
 	return socketCache[id]
 }
 
-func GetSockets(username string) SocketSlice {
-	sockets := SocketSlice{}
+func GetSockets(username string) []*Socket {
+	sockets := make([]*Socket, 0)
 	socketCacheLock.Lock()
 	for _, socket := range socketCache {
 		if socket.Session == nil {

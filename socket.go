@@ -20,8 +20,6 @@ type Socket struct {
 	*Session
 }
 
-type SocketSlice []*Socket
-
 func Open(conn *websocket.Conn) *Socket {
 	s := &Socket{
 		name: "ws://" + conn.Request().RemoteAddr,
@@ -56,21 +54,9 @@ func (socket *Socket) Write(s string) {
 	})
 }
 
-func (slice SocketSlice) WriteAll(s string) {
-	for _, socket := range slice {
-		socket.Write(s)
-	}
-}
-
 func (socket *Socket) WriteJson(json js.Object) {
 	if socket.conn != nil {
 		websocket.Message.Send(socket.conn, json.String())
-	}
-}
-
-func (slice SocketSlice) WriteAllJson(json js.Object) {
-	for _, socket := range slice {
-		socket.WriteJson(json)
 	}
 }
 
