@@ -38,14 +38,14 @@ func (socket Socket) String() string {
 
 func (socket *Socket) Login(session *Session) {
 	if socket.Session != nil {
-		log.Add("Name", socket.Name()).Add("SessionId", socket.Id).Add("Username", socket.Username).Warn("http/socket: login duplicated")
+		log.Add("Name", socket.Name()).Add("SessionID", socket.ID).Add("Username", socket.Username).Warn("http/socket: login duplicated")
 		return
 	}
 
 	socket.Session = session
 	StoreSocket(socket)
 	events.Fire(EVTsocket_login, socket, session)
-	log.Add("Name", socket.Name()).Add("SessionId", session.Id).Add("Username", socket.Username).Info("http/socket: login")
+	log.Add("Name", socket.Name()).Add("SessionID", session.ID).Add("Username", socket.Username).Info("http/socket: login")
 }
 
 func (socket *Socket) Write(s string) {

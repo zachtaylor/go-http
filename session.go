@@ -14,7 +14,7 @@ import (
 var SessionLifetime = 1 * time.Hour
 
 type Session struct {
-	Id       uint
+	ID       uint
 	Username string
 	Expire   time.Time
 	Done     chan error
@@ -34,9 +34,9 @@ func (session *Session) Close() {
 }
 
 func (session *Session) WriteCookie(w http.ResponseWriter) {
-	w.Header().Set("Set-Cookie", "SessionId="+strconv.Itoa(int(session.Id))+"; Path=/;")
+	w.Header().Set("Set-Cookie", "SessionID="+strconv.Itoa(int(session.ID))+"; Path=/;")
 }
 
 func (session Session) String() string {
-	return fmt.Sprintf("#%d:%s", session.Id, session.Username)
+	return fmt.Sprintf("#%d:%s", session.ID, session.Username)
 }

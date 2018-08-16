@@ -50,13 +50,13 @@ func (mem *MemSessionService) Find(username string) []*Session {
 
 func (mem *MemSessionService) Grant(username string) *Session {
 	session := &Session{
-		Id:       NewSessionId(),
+		ID:       NewSessionID(),
 		Username: username,
 		Expire:   time.Now().Add(SessionLifetime),
 		Done:     make(chan error),
 	}
 	mem.Lock()
-	mem.Sessions[session.Id] = session
+	mem.Sessions[session.ID] = session
 	mem.Unlock()
 	log.Add("Session", session).Info("http/session: grant")
 	events.Fire("SessionGrant", session)
@@ -73,11 +73,11 @@ func (mem *MemSessionService) Revoke(id uint) {
 }
 
 func ReadRequestCookie(r *http.Request) (*Session, error) {
-	if sessionCookie, err := r.Cookie("SessionId"); err == nil {
-		if sessionId, err := strconv.ParseUint(sessionCookie.Value, 10, 0); err == nil {
-			if session := SessionService.Get(uint(sessionId)); session != nil {
+	if sessionCookie, err := r.Cookie("SessionID"); err == nil {
+		if sessionID, err := strconv.ParseUint(sessionCookie.Value, 10, 0); err == nil {
+			if session := SessionService.Get(uint(sessionID)); session != nil {
 				return session, nil
-			} else if sessionId == 0 {
+			} else if sessionID == 0 {
 				return nil, nil
 			} else {
 				return nil, errors.New("invalid cookie")
@@ -90,8 +90,8 @@ func ReadRequestCookie(r *http.Request) (*Session, error) {
 	}
 }
 
-func EraseSessionId(w http.ResponseWriter) {
-	w.Header().Set("Set-Cookie", "SessionId=0; Path=/;")
+func EraseSessionID(w http.ResponseWriter) {
+	w.Header().Set("Set-Cookie", "SessionID=0; Path=/;")
 }
 
 func (mem *MemSessionService) watch() {
@@ -100,7 +100,7 @@ func (mem *MemSessionService) watch() {
 
 		for _, session := range mem.Sessions {
 			if session.Expire.Before(now) {
-				revokelist = append(revokelist, session.Id)
+				revokelist = append(revokelist, session.ID)
 			}
 		}
 
