@@ -58,7 +58,7 @@ func (mem *MemSessionService) Grant(username string) *Session {
 	mem.Lock()
 	mem.Sessions[session.ID] = session
 	mem.Unlock()
-	log.Add("Session", session).Info("http/session: grant")
+	log.Add("Session", session).Info("http/session_service_mem: grant")
 	events.Fire("SessionGrant", session)
 	return session
 }
@@ -66,6 +66,7 @@ func (mem *MemSessionService) Grant(username string) *Session {
 func (mem *MemSessionService) Revoke(id uint) {
 	mem.Lock()
 	if session := mem.Sessions[id]; session != nil {
+		log.Add("SessionID", session).Info("http/session_service_mem: revoke")
 		session.Close()
 	}
 	delete(mem.Sessions, id)

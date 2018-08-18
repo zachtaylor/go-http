@@ -1,11 +1,6 @@
 package http
 
-import (
-	"errors"
-	"net/http"
-)
-
-var ErrRespondPathRaw = errors.New("http path cannot respond outside http")
+import "net/http"
 
 type NetHttpRoute struct {
 	Matcher

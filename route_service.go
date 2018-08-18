@@ -13,7 +13,7 @@ type ServiceRoute struct {
 
 func (route *ServiceRoute) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := route.ServiceFunc(RequestFromNet(r, w)); err != nil {
-		log.Error(err)
+		log.Add("Error", err).Error("http/route_service")
 	}
 }
 
@@ -31,7 +31,7 @@ func (route *ServiceRoute) try(r *Request, err *error) {
 				"Quest":   r.Quest,
 				"Agent":   r.Agent,
 				"Session": r.Session,
-			}).Error("route panic")
+			}).Error("http/route_service: panic")
 		}
 	}()
 	*err = route.ServiceFunc(r)

@@ -57,7 +57,7 @@ func (r *Router) Dispatch(q *Request) {
 				"Quest":   q.Quest,
 				"Agent":   q.Agent,
 				"Session": q.Session,
-			}).Error("dispatch respond error")
+			}).Error("http/router: dispatch")
 		}
 		return
 	}
