@@ -26,10 +26,10 @@ func (a NetHttpAgent) String() string {
 	return a.name
 }
 
-func (a *NetHttpAgent) Write(s string) {
-	a.ResponseWriter.Write([]byte(s))
+func (a *NetHttpAgent) Write(s []byte) {
+	a.ResponseWriter.Write(s)
 }
 
 func (a *NetHttpAgent) WriteJson(json js.Object) {
-	a.Write(json.String())
+	a.Write([]byte(json.String()))
 }

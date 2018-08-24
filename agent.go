@@ -4,6 +4,6 @@ import "ztaylor.me/js"
 
 type Agent interface {
 	Name() string
-	Write(string)
+	Write([]byte)
 	WriteJson(js.Object)
 }

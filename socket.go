@@ -48,16 +48,14 @@ func (socket *Socket) Login(session *Session) {
 	log.Add("Name", socket.Name()).Add("SessionID", session.ID).Add("Username", socket.Username).Info("http/socket: login")
 }
 
-func (socket *Socket) Write(s string) {
-	socket.WriteJson(js.Object{
-		"error": s,
-	})
+func (socket *Socket) Write(s []byte) {
+	if socket.conn != nil {
+		websocket.Message.Send(socket.conn, s)
+	}
 }
 
 func (socket *Socket) WriteJson(json js.Object) {
-	if socket.conn != nil {
-		websocket.Message.Send(socket.conn, json.String())
-	}
+	socket.Write([]byte(json.String()))
 }
 
 func (socket *Socket) Watch() {
