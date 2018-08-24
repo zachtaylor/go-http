@@ -1,9 +1,7 @@
 package http
 
 import (
-	"errors"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
@@ -71,24 +69,7 @@ func (mem *MemSessionService) Revoke(id uint) {
 	}
 	delete(mem.Sessions, id)
 	mem.Unlock()
-}
-
-func ReadRequestCookie(r *http.Request) (*Session, error) {
-	if sessionCookie, err := r.Cookie("SessionID"); err == nil {
-		if sessionID, err := strconv.ParseUint(sessionCookie.Value, 10, 0); err == nil {
-			if session := SessionService.Get(uint(sessionID)); session != nil {
-				return session, nil
-			} else if sessionID == 0 {
-				return nil, nil
-			} else {
-				return nil, errors.New("invalid cookie")
-			}
-		} else {
-			return nil, errors.New("cookie format")
-		}
-	} else {
-		return nil, errors.New("session missing")
-	}
+	events.Fire("SessionRevoke", id)
 }
 
 func EraseSessionID(w http.ResponseWriter) {

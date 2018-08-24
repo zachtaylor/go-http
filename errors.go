@@ -12,4 +12,10 @@ func (e Error) Error() string {
 }
 
 // ErrRespondPathRaw is used as a return by a ServiceFunc
-const ErrRespondPathRaw = Error("http route cannot respond outside http")
+const ErrRespondPathRaw = Error("http: route cannot respond outside http")
+
+// ErrCookieFormat is used as a return by a ReadRequestCookie
+const ErrCookieFormat = Error("http: cookie format must parse uint")
+
+// ErrCookieSession is used as a return by a ReadRequestCookie
+const ErrCookieSession = Error("http: cookie session missing")
