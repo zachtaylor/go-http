@@ -14,6 +14,13 @@ type Matcher interface {
 // MatcherSet is used to combine Matchers into a single Matcher
 type MatcherSet []Matcher
 
+// Matches creates a new MatcherSet with the provided Matchers
+//
+// This is syntactic sugar for MatcherSet{...}
+func Matches(matches ...Matcher) Matcher {
+	return MatcherSet(matches)
+}
+
 // Match checks that all included Matchers return true
 func (set MatcherSet) Match(r *http.Request) bool {
 	for _, matcher := range set {
@@ -88,22 +95,36 @@ func (method matcherMethod) Match(r *http.Request) bool {
 	return string(method) == r.Method
 }
 
-// MatcherGET returns a Matcher that checks http.Request.Method is GET
-func MatcherGET() Matcher {
-	return matcherMethod(http.MethodGet)
-}
+// MatcherGET is a Matcher that checks http.Request.Method is GET
+var MatcherGET = matcherMethod(http.MethodGet)
 
-// MatcherDELETE returns a Matcher that checks http.Request.Method is DELETE
-func MatcherDELETE() Matcher {
-	return matcherMethod(http.MethodDelete)
-}
+// MatcherDELETE is a Matcher that checks http.Request.Method is DELETE
+var MatcherDELETE = matcherMethod(http.MethodDelete)
 
-// MatcherPOST returns a Matcher that checks http.Request.Method is POST
-func MatcherPOST() Matcher {
-	return matcherMethod(http.MethodPost)
-}
+// MatcherPOST is a Matcher that checks http.Request.Method is POST
+var MatcherPOST = matcherMethod(http.MethodPost)
 
-// MatcherPUT returns a Matcher that checks http.Request.Method is PUT
-func MatcherPUT() Matcher {
-	return matcherMethod(http.MethodPut)
-}
+// MatcherPUT is a Matcher that checks http.Request.Method is PUT
+var MatcherPUT = matcherMethod(http.MethodPut)
+
+// MatcherSPA is a Matcher that checks for Single Page App response
+//
+// http.Request.Method is GET
+// http.Request.URL.Path does not have file ext after last /
+// http.Request.Header["Accept"] contains "text/html"
+var MatcherSPA = matcherFunc(func(r *http.Request) bool {
+	if r.Method != http.MethodGet {
+		return false
+	}
+	if r.URL.Path == "/" {
+		return false
+	}
+	path := r.URL.Path
+	if i := strings.LastIndex(path, "/"); i > 1 {
+		path = path[i:]
+	}
+	if strings.Contains(path, ".") {
+		return false
+	}
+	return strings.Contains(r.Header.Get("Accept"), "text/html")
+})
