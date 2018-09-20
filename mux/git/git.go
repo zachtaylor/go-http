@@ -8,14 +8,6 @@ import (
 	"ztaylor.me/http/mux"
 )
 
-// Matcher returns true for http git requests
-var Matcher = mux.MatcherFunc(func(r *http.Request) bool {
-	if ua := r.Header["User-Agent"][0]; len(ua) > 2 && ua[:3] == "git" {
-		return true
-	}
-	return false
-})
-
 // NewHandler creates a new default githttp Handler
 func NewHandler(path string) http.Handler {
 	return githttp.New(path)

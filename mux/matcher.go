@@ -77,17 +77,10 @@ func MatcherHost(s string) Matcher {
 	return matcherHost(s)
 }
 
-type matcherJSON struct {
-}
-
-func (_ *matcherJSON) Match(r *http.Request) bool {
+// MatcherJSON checks http.Request.RequestURI ends with .json
+var MatcherJSON = MatcherFunc(func(r *http.Request) bool {
 	return strings.HasSuffix(r.RequestURI, ".json")
-}
-
-// MatcherJSON returns a Matcher that checks http.Request.RequestURI ends with .json
-func MatcherJSON() *matcherJSON {
-	return nil
-}
+})
 
 type matcherMethod string
 
@@ -127,4 +120,18 @@ var MatcherSPA = matcherFunc(func(r *http.Request) bool {
 		return false
 	}
 	return strings.Contains(r.Header.Get("Accept"), "text/html")
+})
+
+// MatcherGit checks r.Header["User-Agent"] is "git"
+var MatcherGit = MatcherFunc(func(r *http.Request) bool {
+	if ua := r.Header["User-Agent"][0]; len(ua) > 2 && ua[:3] == "git" {
+		return true
+	}
+	return false
+})
+
+// MatcherGoGet checks r.Header["User-Agent"] is "Go-http-client"
+var MatcherGoGet = matcherFunc(func(r *http.Request) bool {
+	ua := r.Header.Get("User-Agent")
+	return len(ua) > 13 && ua[:14] == "Go-http-client"
 })
