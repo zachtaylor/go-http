@@ -77,6 +77,11 @@ func MatcherHost(s string) Matcher {
 	return matcherHost(s)
 }
 
+// MatcherHTTPS checks http.Request.TLS has a ServerName
+var MatcherHTTPS = MatcherFunc(func(r *http.Request) bool {
+	return r.TLS != nil && r.TLS.ServerName != ""
+})
+
 // MatcherJSON checks http.Request.RequestURI ends with .json
 var MatcherJSON = MatcherFunc(func(r *http.Request) bool {
 	return strings.HasSuffix(r.RequestURI, ".json")
