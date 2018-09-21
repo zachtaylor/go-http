@@ -129,7 +129,7 @@ var MatcherSPA = matcherFunc(func(r *http.Request) bool {
 
 // MatcherGit checks r.Header["User-Agent"] is "git"
 var MatcherGit = MatcherFunc(func(r *http.Request) bool {
-	if ua := r.Header["User-Agent"][0]; len(ua) > 2 && ua[:3] == "git" {
+	if ua := r.Header.Get("User-Agent"); len(ua) > 2 && ua[:3] == "git" {
 		return true
 	}
 	return false
