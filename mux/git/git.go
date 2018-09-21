@@ -8,6 +8,9 @@ import (
 	"ztaylor.me/http/mux"
 )
 
+// Matcher is import ztaylor.me/http/mux.MatcherGit
+var Matcher = mux.MatcherGit
+
 // NewHandler creates a new default githttp Handler
 func NewHandler(path string) http.Handler {
 	return githttp.New(path)
