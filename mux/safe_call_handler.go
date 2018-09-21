@@ -10,7 +10,13 @@ import (
 func SafeCallHandler(f http.Handler, w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
-			log.Add("Error", e).Warn("mux: recover")
+			log.WithFields(log.Fields{
+				"Host":    r.Host,
+				"Path":    r.RequestURI,
+				"Cookies": r.Cookies,
+				"Remote":  r.RemoteAddr,
+				"Error":   e,
+			}).Error("mux: recover")
 		}
 	}()
 	f.ServeHTTP(w, r)
