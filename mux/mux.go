@@ -60,5 +60,5 @@ func (mux *Mux) ListenAndServe(port string) {
 
 // ListenAndServeTLS starts this Server
 func (mux *Mux) ListenAndServeTLS(cert string, key string) {
-	log.Error(http.ListenAndServeTLS(":43", cert, key, mux))
+	log.Error(http.ListenAndServeTLS(":443", cert, key, mux))
 }
