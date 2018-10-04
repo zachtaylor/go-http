@@ -5,7 +5,7 @@ import (
 )
 
 type Message struct {
-	Name string
+	URI  string
 	User string
 	Data js.Object
 }

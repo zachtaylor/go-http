@@ -1,8 +1,11 @@
 package ws
 
 import (
+	"errors"
 	"sync"
 )
+
+var ErrSocketKeyExists = errors.New("socket key exists")
 
 type CacheService struct {
 	cache   map[string]*Socket
@@ -21,10 +24,10 @@ func (service *CacheService) Get(key string) *Socket {
 func (service *CacheService) Store(socket *Socket) error {
 	var err error
 	service.Lock()
-	if service.cache[socket.String()] == nil {
-		service.cache[socket.String()] = socket
+	if key := socket.String(); service.cache[key] == nil {
+		service.cache[key] = socket
 	} else {
-		err = ErrKeyExists
+		err = ErrSocketKeyExists
 	}
 	service.Unlock()
 	return err
@@ -40,10 +43,10 @@ func (service *CacheService) AddRoute(r Route) {
 	service.routers = append(service.routers, r)
 }
 
-func (service *CacheService) Dispatch(msg *Message) {
+func (service *CacheService) Dispatch(socket *Socket, msg *Message) {
 	for _, router := range service.routers {
 		if router.Match(msg) {
-			router.ServeWS(msg)
+			router.ServeWS(socket, msg)
 			return
 		}
 	}
@@ -55,7 +58,7 @@ var Service interface {
 	Store(*Socket) error
 	Remove(string)
 	AddRoute(Route)
-	Dispatch(*Message)
+	Dispatch(*Socket, *Message)
 } = &CacheService{
 	cache:   make(map[string]*Socket),
 	routers: make([]Router, 0),

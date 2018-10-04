@@ -7,7 +7,15 @@ type Matcher interface {
 
 // Handler handles a Message
 type Handler interface {
-	ServeWS(*Message)
+	ServeWS(*Socket, *Message)
+}
+
+// HandlerFunc wraps a func to implement Handler
+type HandlerFunc func(*Socket, *Message)
+
+// ServeWS calls the HandlerFunc with m, which provides Handler
+func (h HandlerFunc) ServeWS(s *Socket, m *Message) {
+	h(s, m)
 }
 
 // Route holds pointers to Matcher and Handler

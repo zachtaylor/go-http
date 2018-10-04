@@ -2,52 +2,67 @@ package ws
 
 import (
 	"bytes"
+	"strings"
 
 	"golang.org/x/net/websocket"
-	"ztaylor.me/events"
 	"ztaylor.me/http/sessions"
 	"ztaylor.me/js"
 	"ztaylor.me/log"
 )
 
-const EVTopen = "http/mux/ws.Open"
-const EVTlogin = "http/mux/ws.Login"
-const EVTreceive = "http/mux/ws.Receive"
-const EVTclose = "http/mux/ws.Close"
-
 type Socket struct {
+	Session *sessions.Grant
 	conn    *websocket.Conn
-	session *sessions.Grant
+	done    chan bool
 }
 
 func Open(conn *websocket.Conn) *Socket {
 	s := &Socket{
 		conn: conn,
+		done: make(chan bool),
 	}
 	return s
 }
 
-func (socket *Socket) User() string {
-	if socket == nil || socket.session == nil {
-		return ""
+// GetUser returns a nonempty string value to represent this socket
+//
+// If the underlying Session is not available, GetUser returns a best-guess "anon" name
+func (socket *Socket) GetUser() string {
+	if socket != nil && socket.Session != nil {
+		return socket.Session.Name
+	} else if i := strings.LastIndex(socket.conn.Request().RemoteAddr, ":"); i < 0 {
+		return "anon"
+	} else {
+		return "anon#" + socket.conn.Request().RemoteAddr[i+1:]
 	}
-	return socket.session.Name
 }
 
 func (socket Socket) String() string {
-	return "ws(" + socket.User() + ")://" + socket.conn.Request().RemoteAddr
+	return "ws(" + socket.GetUser() + ")://" + socket.conn.Request().RemoteAddr
+}
+
+func (socket *Socket) Done() chan bool {
+	done := make(chan bool)
+	go func() {
+		defer close(done)
+
+		if socket.done == nil {
+			return
+		}
+		<-socket.done
+	}()
+	return done
 }
 
 func (socket *Socket) Login(session *sessions.Grant) {
-	if socket.session != nil {
-		log.Add("Socket", socket).Add("Session", session).Warn("http/socket: login duplicated")
+	if socket.Session != nil {
+		log.Add("Socket", socket).Add("Session", session).Warn("http/ws: login duplicated")
 		return
 	}
 
-	socket.session = session
+	socket.Session = session
 	Service.Store(socket)
-	events.Fire(EVTlogin, socket, session)
-	log.Add("Socket", socket).Info("http/socket: login")
+	log.Add("Socket", socket).Info("http/ws: login")
 }
 
 func (socket *Socket) Write(s []byte) {
@@ -60,48 +75,58 @@ func (socket *Socket) WriteJson(json js.Object) {
 	socket.Write([]byte(json.String()))
 }
 
-func (socket *Socket) Watch() {
-	events.Fire(EVTopen, socket)
-	receiver := make(chan *Message)
+func (socket *Socket) Watch(h Handler) {
+	receiver := make(chan *Message, 1)
+	go log.Protect(func() {
+		for {
+			msg := socket.Listen()
+			if msg == nil {
+				close(receiver)
+				return
+			}
+			receiver <- msg
+		}
+	})
+
 	for {
-		go socket.Listen(receiver)
-		msg := <-receiver
-		if msg != nil {
-			Service.Dispatch(msg)
-			events.Fire(EVTreceive, socket, msg)
-		} else {
-			log.Add("Socket", socket).Debug("http/socket: done")
-			break
+		select {
+		case msg := <-receiver:
+			if msg == nil {
+				close(socket.done)
+			} else {
+				h.ServeWS(socket, msg)
+			}
+		case <-socket.done:
+			log.Add("Socket", socket).Info("http/ws: closed")
+			Service.Remove(socket.String())
+			return
 		}
 	}
-	Service.Remove(socket.String())
-	events.Fire(EVTclose, socket)
 }
 
-func (socket *Socket) Listen(receiver chan *Message) {
+func (socket *Socket) Listen() *Message {
 	s := ""
-	msg := &Message{
-		User: socket.User(),
-		Data: js.Object{},
-	}
+	msg := &Message{}
 	if socket == nil || socket.conn == nil {
-		log.Add("Socket", socket).Warn("http/socket: listen socket is nil")
+		log.Add("Socket", socket).Warn("http/ws: listen socket is nil")
+		return nil
 	} else if err := websocket.Message.Receive(socket.conn, &s); err != nil {
 		if err.Error() != "EOF" {
-			log.Add("Error", err).Error("http/socket: receive error")
-			close(receiver)
+			log.Add("Error", err).Error("http/ws: receive error")
 		}
+		return nil
 	} else if err := js.NewDecoder(bytes.NewBufferString(s)).Decode(&msg); err != nil {
 		log.WithFields(log.Fields{
 			"Socket": socket,
 			"Val":    s,
 			"Error":  err,
-		}).Error("http/socket: receive decode error")
-	} else {
-		log.WithFields(log.Fields{
-			"Socket":  socket,
-			"Message": msg.Name,
-		}).Debug("http/socket: receive")
-		receiver <- msg
+		}).Error("http/ws: receive decode error")
+		return nil
 	}
+	msg.User = socket.GetUser()
+	log.WithFields(log.Fields{
+		"Socket":  socket,
+		"Message": msg,
+	}).Debug("http/ws: receive")
+	return msg
 }
