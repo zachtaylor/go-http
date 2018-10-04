@@ -29,7 +29,9 @@ func (mux *Mux) AddRouter(r Router) {
 func (mux *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, route := range mux.routers {
 		if route.Match(r) {
-			SafeCallHandler(route, w, r)
+			log.Protect(func() {
+				route.ServeHTTP(w, r)
+			})
 			return
 		}
 	}
