@@ -47,7 +47,7 @@ type matcherRegex struct {
 }
 
 func (rgx *matcherRegex) Match(r *http.Request) bool {
-	return rgx.MatchString(r.RequestURI)
+	return rgx.MatchString(r.URL.Path)
 }
 
 // MatcherRegex creates a regexp match check against http.Request.RequestURI
@@ -58,7 +58,7 @@ func MatcherRegex(s string) Matcher {
 type matcherLit string
 
 func (s matcherLit) Match(r *http.Request) bool {
-	return string(s) == r.RequestURI
+	return string(s) == r.URL.Path
 }
 
 // MatcherLit creates a literal match check against http.Request.RequestURI
