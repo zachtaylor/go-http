@@ -91,15 +91,15 @@ func (socket *Socket) Watch(h Handler) {
 	for {
 		select {
 		case msg := <-receiver:
-			if msg == nil {
-				close(socket.done)
-			} else {
+			if msg != nil {
 				h.ServeWS(socket, msg)
 			}
-		case <-socket.done:
-			log.Add("Socket", socket).Info("http/ws: closed")
-			Service.Remove(socket.String())
-			return
+		case _, ok := <-socket.done:
+			if !ok {
+				log.Add("Socket", socket).Info("http/ws: closed")
+				Service.Remove(socket.String())
+				return
+			}
 		}
 	}
 }
