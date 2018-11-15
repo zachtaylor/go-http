@@ -11,7 +11,7 @@ import (
 )
 
 type Socket struct {
-	Session *sessions.Grant
+	Session *sessions.T
 	conn    *websocket.Conn
 	done    chan bool
 }
@@ -29,7 +29,7 @@ func Open(conn *websocket.Conn) *Socket {
 // If the underlying Session is not available, GetUser returns a best-guess "anon" name
 func (socket *Socket) GetUser() string {
 	if socket != nil && socket.Session != nil {
-		return socket.Session.Name
+		return socket.Session.Name()
 	} else if i := strings.LastIndex(socket.conn.Request().RemoteAddr, ":"); i < 0 {
 		return "anon"
 	} else {
@@ -41,20 +41,11 @@ func (socket Socket) String() string {
 	return "ws(" + socket.GetUser() + ")://" + socket.conn.Request().RemoteAddr
 }
 
-func (socket *Socket) Done() chan bool {
-	done := make(chan bool)
-	go func() {
-		defer close(done)
-
-		if socket.done == nil {
-			return
-		}
-		<-socket.done
-	}()
-	return done
+func (socket *Socket) Done() <-chan bool {
+	return socket.done
 }
 
-func (socket *Socket) Login(session *sessions.Grant) {
+func (socket *Socket) Login(session *sessions.T) {
 	if socket.Session != nil {
 		log.Add("Socket", socket).Add("Session", session).Warn("http/ws: login duplicated")
 		return

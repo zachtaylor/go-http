@@ -6,16 +6,16 @@ import (
 	"ztaylor.me/http/cookies"
 )
 
-func ReadCookie(r *http.Request) *Grant {
+func ReadCookie(r *http.Request) *T {
 	if cookie, err := cookies.Read(r, "SessionID"); err != nil {
 		return nil
-	} else if session := Service.Get(cookie); session == nil {
+	} else if session := Service.SessionID(cookie); session == nil {
 		return nil
 	} else {
 		return session
 	}
 }
 
-func WriteCookie(w http.ResponseWriter, session *Grant) {
-	cookies.Write(w, "SessionID", session.ID)
+func WriteCookie(w http.ResponseWriter, session *T) {
+	cookies.Write(w, "SessionID", session.id)
 }
