@@ -77,6 +77,11 @@ func MatcherHost(s string) Matcher {
 	return matcherHost(s)
 }
 
+// MatcherHTTP checks http.Request.TLS is nil or has a ServerName
+var MatcherHTTP = MatcherFunc(func(r *http.Request) bool {
+	return r.TLS == nil || r.TLS.ServerName == ""
+})
+
 // MatcherHTTPS checks http.Request.TLS has a ServerName
 var MatcherHTTPS = MatcherFunc(func(r *http.Request) bool {
 	return r.TLS != nil && r.TLS.ServerName != ""
