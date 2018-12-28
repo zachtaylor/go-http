@@ -1,8 +1,6 @@
 package cookies // import "ztaylor.me/http/cookies"
 
-import (
-	"net/http"
-)
+import "net/http"
 
 // Read a cookie value
 func Read(r *http.Request, name string) (string, error) {

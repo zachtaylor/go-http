@@ -5,18 +5,6 @@ import (
 	"time"
 )
 
-// Provider is a generic sessions container
-type Provider interface {
-	// Count returns len active Sessions
-	Count() int
-	// Get finds a Session with id
-	SessionID(id string) *T
-	// NewGrant creates a Grant with name
-	NewGrant(name string) *T
-	// Watch needs a goroutine to expire Sessions older than d
-	Watch(d time.Duration)
-}
-
 // T is a Session
 type T struct {
 	id   string
@@ -38,15 +26,21 @@ func New(name string) *T {
 func (t *T) ID() string {
 	return t.id
 }
+
 func (t *T) Name() string {
 	return t.name
 }
+
 func (t *T) Time() time.Time {
 	return t.time
 }
-func (t *T) UpdateTime() time.Time {
-	return t.time
+
+func (t *T) UpdateTime() {
+	t.Lock()
+	t.time = time.Now()
+	t.Unlock()
 }
+
 func (t *T) Revoke() {
 	t.Lock()
 	if t.done != nil {
@@ -55,9 +49,11 @@ func (t *T) Revoke() {
 	}
 	t.Unlock()
 }
-func (t *T) Done() chan bool {
+
+func (t *T) Done() <-chan bool {
 	return t.done
 }
+
 func (t T) String() string {
 	return "sessions.Grant#" + t.id
 }

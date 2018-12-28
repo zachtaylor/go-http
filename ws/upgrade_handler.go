@@ -8,16 +8,17 @@ import (
 	"ztaylor.me/log"
 )
 
+// UpgradeHandler provides a websocket handshake func
 func UpgradeHandler(h Handler) http.Handler {
 	return websocket.Handler(func(conn *websocket.Conn) {
 		log.Add("Addr", conn.Request().RemoteAddr).Debug("http/socket_handler")
 
-		socket := Open(conn)
+		socket := NewSocket(conn)
 
-		if session := sessions.ReadCookie(conn.Request()); session != nil {
+		if session := sessions.FromRequestCookie(conn.Request()); session != nil {
 			socket.Login(session)
 		}
 
-		socket.Watch(h)
+		socket.watch(h)
 	})
 }

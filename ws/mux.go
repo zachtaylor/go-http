@@ -4,7 +4,7 @@ import "ztaylor.me/log"
 
 // Mux is set of Routers
 //
-// safely invokes each router, using Router.Matcher in the order added to choose Handler
+// implements Handler
 type Mux struct {
 	routers []Router
 }
@@ -21,6 +21,7 @@ func (mux *Mux) AddRouter(r Router) {
 	mux.routers = append(mux.routers, r)
 }
 
+// ServeWS routes a message
 func (mux *Mux) ServeWS(socket *Socket, m *Message) {
 	for _, route := range mux.routers {
 		if route.Match(m) {

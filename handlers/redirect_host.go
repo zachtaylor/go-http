@@ -1,8 +1,6 @@
-package handler
+package handlers
 
-import (
-	"net/http"
-)
+import "net/http"
 
 // RedirectHost is a Handler that uses hostname rewrite redirect http.StatusMovedPermanently
 func RedirectHost(host string) http.Handler {

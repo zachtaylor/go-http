@@ -10,13 +10,15 @@ import (
 	"ztaylor.me/log"
 )
 
+// Socket is a websocket connection
 type Socket struct {
 	Session *sessions.T
 	conn    *websocket.Conn
 	done    chan bool
 }
 
-func Open(conn *websocket.Conn) *Socket {
+// NewSocket creates a Socket
+func NewSocket(conn *websocket.Conn) *Socket {
 	s := &Socket{
 		conn: conn,
 		done: make(chan bool),
@@ -41,32 +43,33 @@ func (socket Socket) String() string {
 	return "ws(" + socket.GetUser() + ")://" + socket.conn.Request().RemoteAddr
 }
 
+// Done is an observable channel that indicates the socket has been closed
 func (socket *Socket) Done() <-chan bool {
 	return socket.done
 }
 
+// Login saves this socket in global Service
 func (socket *Socket) Login(session *sessions.T) {
 	if socket.Session != nil {
-		log.Add("Socket", socket).Add("Session", session).Warn("http/ws: login duplicated")
-		return
+		Service.Remove(socket.String())
 	}
-
 	socket.Session = session
-	Service.Store(socket)
-	log.Add("Socket", socket).Info("http/ws: login")
+	Service.Store(socket.String(), socket)
 }
 
+// Write sends a buffer to the underlying websocket connection
 func (socket *Socket) Write(s []byte) {
 	if socket.conn != nil {
 		websocket.Message.Send(socket.conn, s)
 	}
 }
 
+// WriteJson uses Socket.Write and js.Object.String
 func (socket *Socket) WriteJson(json js.Object) {
 	socket.Write([]byte(json.String()))
 }
 
-func (socket *Socket) Watch(h Handler) {
+func (socket *Socket) watch(h Handler) {
 	receiver := make(chan *Message, 1)
 	go log.Protect(func() {
 		for {
@@ -81,13 +84,16 @@ func (socket *Socket) Watch(h Handler) {
 
 	for {
 		select {
-		case msg := <-receiver:
-			if msg != nil {
+		case msg, ok := <-receiver:
+			if ok {
 				h.ServeWS(socket, msg)
+			} else {
+				log.Protect(func() {
+					close(socket.done)
+				})
 			}
 		case _, ok := <-socket.done:
 			if !ok {
-				log.Add("Socket", socket).Info("http/ws: closed")
 				Service.Remove(socket.String())
 				return
 			}
@@ -95,6 +101,7 @@ func (socket *Socket) Watch(h Handler) {
 	}
 }
 
+// Listen creates the next Message from the Socket by waiting forever
 func (socket *Socket) Listen() *Message {
 	s := ""
 	msg := &Message{}

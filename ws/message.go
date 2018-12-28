@@ -6,6 +6,7 @@ import (
 	"ztaylor.me/js"
 )
 
+// Message is websocket message data
 type Message struct {
 	URI  string
 	User string

@@ -5,26 +5,33 @@ import (
 	"sync"
 )
 
+// ErrSocketKeyExists is returned by service.Store when the key is duplicate
 var ErrSocketKeyExists = errors.New("socket key exists")
 
-type CacheService struct {
+// Service is the global websocket Manager
+var Service Manager = &service{
+	cache:   make(map[string]*Socket),
+	routers: make([]Router, 0),
+}
+
+type service struct {
 	cache   map[string]*Socket
 	routers []Router
 	sync.Mutex
 }
 
-func (service *CacheService) Count() int {
+func (service *service) Count() int {
 	return len(service.cache)
 }
 
-func (service *CacheService) Get(key string) *Socket {
+func (service *service) Get(key string) *Socket {
 	return service.cache[key]
 }
 
-func (service *CacheService) Store(socket *Socket) error {
+func (service *service) Store(key string, socket *Socket) error {
 	var err error
 	service.Lock()
-	if key := socket.String(); service.cache[key] == nil {
+	if service.cache[key] == nil {
 		service.cache[key] = socket
 	} else {
 		err = ErrSocketKeyExists
@@ -33,33 +40,21 @@ func (service *CacheService) Store(socket *Socket) error {
 	return err
 }
 
-func (service *CacheService) Remove(key string) {
+func (service *service) Remove(key string) {
 	service.Lock()
 	delete(service.cache, key)
 	service.Unlock()
 }
 
-func (service *CacheService) AddRoute(r Route) {
+func (service *service) AddRoute(r Route) {
 	service.routers = append(service.routers, r)
 }
 
-func (service *CacheService) Dispatch(socket *Socket, msg *Message) {
+func (service *service) Dispatch(socket *Socket, msg *Message) {
 	for _, router := range service.routers {
 		if router.Match(msg) {
 			router.ServeWS(socket, msg)
 			return
 		}
 	}
-}
-
-var Service interface {
-	Count() int
-	Get(string) *Socket
-	Store(*Socket) error
-	Remove(string)
-	AddRoute(Route)
-	Dispatch(*Socket, *Message)
-} = &CacheService{
-	cache:   make(map[string]*Socket),
-	routers: make([]Router, 0),
 }

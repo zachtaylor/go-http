@@ -1,11 +1,11 @@
-package handler
+package handlers
 
 import (
 	"html/template"
 	"net/http"
 )
 
-var goGetTpl = `<html>
+const goGetTpl = `<html>
 	<meta name="go-import" content="{{.Host}}/{{.Package}} git https://{{.Host}}/{{.Package}}">
 </html>`
 
@@ -14,6 +14,8 @@ type goGetData struct {
 	Package string
 }
 
+// GoGet returns a Handler that prints the minimum go-import data to
+// satisfy the `go get` tool for its' requested package
 func GoGet(host string) http.Handler {
 	t := template.Must(template.New("").Parse(goGetTpl))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

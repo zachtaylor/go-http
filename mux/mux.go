@@ -27,14 +27,16 @@ func (mux *Mux) AddRouter(r Router) {
 }
 
 func (mux *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var router Router
 	for _, route := range mux.routers {
 		if route.Match(r) {
-			log.Protect(func() {
-				route.ServeHTTP(w, r)
-			})
-			return
+			router = route
+			break
 		}
 	}
+	log.Protect(func() {
+		router.ServeHTTP(w, r)
+	})
 }
 
 // Map is shorthand for AddRoute
@@ -56,11 +58,11 @@ func (mux *Mux) MapRgx(path string, h http.Handler) {
 }
 
 // ListenAndServe starts this Server
-func (mux *Mux) ListenAndServe(port string) {
-	log.Error(http.ListenAndServe(port, mux))
+func (mux *Mux) ListenAndServe(port string) error {
+	return http.ListenAndServe(port, mux)
 }
 
 // ListenAndServeTLS starts this Server
-func (mux *Mux) ListenAndServeTLS(cert string, key string) {
-	log.Error(http.ListenAndServeTLS(":443", cert, key, mux))
+func (mux *Mux) ListenAndServeTLS(cert string, key string) error {
+	return http.ListenAndServeTLS(":443", cert, key, mux)
 }
