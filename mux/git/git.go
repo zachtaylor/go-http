@@ -1,4 +1,4 @@
-package git
+package git // import "ztaylor.me/http/mux/git"
 
 import (
 	"net/http"
