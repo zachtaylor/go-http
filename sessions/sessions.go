@@ -1,18 +1,9 @@
 package sessions // import "ztaylor.me/http/sessions"
 
 import (
-	"sync"
+	"net/http"
 	"time"
 )
-
-// T is a Session
-type T struct {
-	id   string
-	name string
-	time time.Time
-	done chan bool
-	sync.Mutex
-}
 
 // New creates an initialized orphan Session
 func New(name string) *T {
@@ -23,37 +14,17 @@ func New(name string) *T {
 	}
 }
 
-func (t *T) ID() string {
-	return t.id
-}
-
-func (t *T) Name() string {
-	return t.name
-}
-
-func (t *T) Time() time.Time {
-	return t.time
-}
-
-func (t *T) UpdateTime() {
-	t.Lock()
-	t.time = time.Now()
-	t.Unlock()
-}
-
-func (t *T) Revoke() {
-	t.Lock()
-	if t.done != nil {
-		close(t.done)
-		t.done = nil
+// NewService creates a sessions Manager with expiry goroutine
+func NewService(lifetime time.Duration) (s *Service) {
+	s = &Service{
+		keygen: Keygen,
+		cache:  make(map[string]*T),
 	}
-	t.Unlock()
+	go s.watch(lifetime)
+	return
 }
 
-func (t *T) Done() <-chan bool {
-	return t.done
-}
-
-func (t T) String() string {
-	return "sessions.Grant#" + t.id
+// EraseSessionID writes a SessionID header that is empty value
+func EraseSessionID(w http.ResponseWriter) {
+	cookieWrite(w, "")
 }

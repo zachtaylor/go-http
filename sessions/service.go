@@ -1,78 +1,70 @@
 package sessions
 
 import (
+	"net/http"
 	"sync"
 	"time"
-
-	"ztaylor.me/keygen"
 )
 
-// Manager is a generic sessions container
-type Manager interface {
-	// Count returns len active Sessions
-	Count() int
-	// Get finds a Session with id
-	SessionID(id string) *T
-	// NewGrant creates a Grant with name
-	NewGrant(name string) *T
-	// Watch needs a goroutine to expire Sessions older than d
-	Watch(d time.Duration)
+// Service deals with sessions, create using Service
+type Service struct {
+	keygen Keygener
+	cache  map[string]*T
+	lock   sync.Mutex
 }
 
-// Service is the global sessions Manager
-var Service Manager = &service{
-	Keygener: keygen.DefaultSettings,
-	cache:    make(map[string]*T),
+// Count returns len active Sessions
+func (s *Service) Count() int {
+	return len(s.cache)
 }
 
-type service struct {
-	keygen.Keygener
-	cache map[string]*T
-	sync.Mutex
+// SessionID finds a Session with id
+func (s *Service) SessionID(id string) *T {
+	return s.cache[id]
 }
 
-func (service *service) Count() int {
-	return len(service.cache)
-}
-
-func (service *service) SessionID(id string) *T {
-	return service.cache[id]
-}
-
-func (service *service) NewGrant(name string) *T {
-	t := New(name)
-	service.Lock()
-	t.id = service.Keygen()
-	for service.cache[t.id] != nil {
-		t.id = service.Keygen()
+// ReadRequestCookie returns the session referred by the cookie, if valid
+func (s *Service) ReadRequestCookie(r *http.Request) (t *T) {
+	if cookie, err := cookieRead(r); err != nil {
+	} else if session := s.SessionID(cookie); session == nil {
+	} else {
+		t = session
 	}
-	service.cache[t.id] = t
-	service.Unlock()
-	return t
+	return
 }
 
-func (service *service) expire(t *T) {
-	service.Lock()
-	delete(service.cache, t.id)
-	service.Unlock()
+// NewGrant creates a Grant with name
+func (s *Service) NewGrant(name string) (t *T) {
+	t = New(name)
+	s.lock.Lock()
+	t.id = s.keygen.Keygen()
+	for s.cache[t.id] != nil {
+		t.id = s.keygen.Keygen()
+	}
+	s.cache[t.id] = t
+	s.lock.Unlock()
+	return
+}
+
+func (s *Service) expire(t *T) {
+	s.lock.Lock()
+	delete(s.cache, t.id)
+	s.lock.Unlock()
 	t.Revoke()
 }
 
-// Watch requires goroutine to monitor session expiry. Defines session lifetime.
-//
-// as in `go service.Watch(time.Duration)` before `server.Start()`
-func (service *service) Watch(d time.Duration) {
+func (s *Service) watch(d time.Duration) {
 	tick := time.Minute
 	if d < time.Minute {
 		tick = time.Second
 	}
 	for now := range time.Tick(tick) {
-		service.Lock()
-		for _, t := range service.cache {
+		s.lock.Lock()
+		for _, t := range s.cache {
 			if t.done == nil || now.Sub(t.Time()) > d {
-				go service.expire(t)
+				go s.expire(t)
 			}
 		}
-		service.Unlock()
+		s.lock.Unlock()
 	}
 }
