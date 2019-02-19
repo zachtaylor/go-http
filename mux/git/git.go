@@ -8,20 +8,15 @@ import (
 	"ztaylor.me/http/mux"
 )
 
-// Matcher is import ztaylor.me/http/mux.MatcherGit
-var Matcher = mux.MatcherGit
-
 // NewHandler creates a new default githttp Handler
 func NewHandler(path string) http.Handler {
 	return githttp.New(path)
 }
 
 // AuthNoPush is httpmuxgit middleware for restricting all git.Push requests
-var AuthNoPush = auth.Authenticator(func(info auth.AuthInfo) (bool, error) {
-	if info.Push {
-		return false, nil
-	}
-	return true, nil
+var AuthNoPush = auth.Authenticator(func(info auth.AuthInfo) (bool bool, error error) {
+	bool = !info.Push
+	return
 })
 
 // NewRoute creates a default kind of http git route
@@ -29,7 +24,7 @@ var AuthNoPush = auth.Authenticator(func(info auth.AuthInfo) (bool, error) {
 // Uses Matcher, NewHandler, AuthNoPush
 func NewRoute(path string) *mux.Route {
 	return &mux.Route{
-		Matcher: Matcher,
+		Router:  mux.RouterGit,
 		Handler: AuthNoPush(NewHandler(path)),
 	}
 }
