@@ -8,36 +8,26 @@ type Handler interface {
 // HandlerFunc wraps a func to implement Handler
 type HandlerFunc func(*Socket, *Message)
 
-// Manager is a generic Socket container
-type Manager interface {
-	Count() int
-	Get(string) *Socket
-	Store(string, *Socket) error
-	Remove(string)
-	AddRoute(Route)
-	Dispatch(*Socket, *Message)
-}
-
-// Matcher tests a Message
-type Matcher interface {
-	Match(*Message) bool
-}
-
-// Route holds pointers to Matcher and Handler
-//
-// Route provides Router
-type Route struct {
-	Matcher
-	Handler
-}
-
-// Router provides Matcher and Handler
-type Router interface {
-	Matcher
-	Handler
-}
-
 // ServeWS calls the HandlerFunc with m, which provides Handler
 func (h HandlerFunc) ServeWS(s *Socket, m *Message) {
 	h(s, m)
+}
+
+// Router tests a Message
+type Router interface {
+	Route(*Message) bool
+}
+
+// Route holds pointers to Router and Handler
+//
+// Route provides Plugin
+type Route struct {
+	Router
+	Handler
+}
+
+// Plugin provides Router and Handler
+type Plugin interface {
+	Router
+	Handler
 }

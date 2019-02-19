@@ -48,13 +48,13 @@ func (socket *Socket) Done() <-chan bool {
 	return socket.done
 }
 
-// Login saves this socket in global Service
-func (socket *Socket) Login(session *sessions.T) {
+// Login saves this socket in the Service
+func (socket *Socket) Login(service *Service, session *sessions.T) {
 	if socket.Session != nil {
-		Service.Remove(socket.String())
+		service.Remove(socket.String())
 	}
 	socket.Session = session
-	Service.Store(socket.String(), socket)
+	service.Store(socket.String(), socket)
 }
 
 // Write sends a buffer to the underlying websocket connection
@@ -69,7 +69,7 @@ func (socket *Socket) WriteJson(json js.Object) {
 	socket.Write([]byte(json.String()))
 }
 
-func (socket *Socket) watch(h Handler) {
+func (socket *Socket) watch(service *Service, h Handler) {
 	receiver := make(chan *Message, 1)
 	go log.Protect(func() {
 		for {
@@ -94,7 +94,7 @@ func (socket *Socket) watch(h Handler) {
 			}
 		case _, ok := <-socket.done:
 			if !ok {
-				Service.Remove(socket.String())
+				service.Remove(socket.String())
 				return
 			}
 		}
