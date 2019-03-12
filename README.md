@@ -14,9 +14,9 @@ Provides additional `http.Handler` types
 
 ## Package `mux`
 
-Provides type `Matcher`, used to sort `*http.Request`
+Provides type `Router`, used to sort `*http.Request`
 
-Provides additional `Matcher` types
+Provides additional `Router` types
 
 ## Package `mux/git`
 
@@ -32,4 +32,4 @@ Provides syntactic sugar and interfaces for tracking visitors by IP using `net/h
 
 ## Package `ws`
 
-Provides websocket connection integrations
+Provides websocket connection upgrader, and message handler/mux types

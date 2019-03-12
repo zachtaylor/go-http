@@ -1,6 +1,7 @@
 package mux_test
 
 import (
+	"net/http/httptest"
 	"testing"
 
 	"ztaylor.me/http/mux"
@@ -9,23 +10,24 @@ import (
 func TestRouterPathStarts(t *testing.T) {
 	router := mux.RouterPathStarts("/hello/")
 
-	in := NewInput()
+	r := httptest.NewRequest("", "/hello/", nil)
 
-	in.path = "/hello/"
-
-	if !router.Route(in) {
+	if !router.Route(r) {
+		t.Log("router path starts /hello/ matches /hello/")
 		t.Fail()
 	}
 
-	in.path = "/hello/world"
+	r.URL.Path = "/hello"
 
-	if !router.Route(in) {
+	if router.Route(r) {
+		t.Log("router path starts /hello/ matches /hello")
 		t.Fail()
 	}
 
-	in.path = "/hello"
+	r.URL.Path = "/hello/world"
 
-	if router.Route(in) {
+	if !router.Route(r) {
+		t.Log("router path starts /hello matches /hello/world")
 		t.Fail()
 	}
 }

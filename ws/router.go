@@ -15,15 +15,12 @@ func (set RouterSet) Route(m *Message) bool {
 	return true
 }
 
-type routerFunc func(*Message) bool
-
-func (f routerFunc) Route(m *Message) bool {
-	return f(m)
-}
-
 // RouterFunc turns a func into a Router
-func RouterFunc(f func(*Message) bool) Router {
-	return routerFunc(f)
+type RouterFunc func(*Message) bool
+
+// Route implements Router by calling the underlying func
+func (f RouterFunc) Route(m *Message) bool {
+	return f(m)
 }
 
 type routerRegex struct {
@@ -42,6 +39,7 @@ func RouterRegex(s string) Router {
 // RouterLit creates a literal match check against Message.Name
 type RouterLit string
 
+// Route implements Router by literally matching the Message.URI
 func (s RouterLit) Route(m *Message) bool {
 	return string(s) == m.URI
 }

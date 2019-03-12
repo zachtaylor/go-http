@@ -19,8 +19,6 @@ type Router interface {
 }
 
 // Route holds pointers to Router and Handler
-//
-// Route provides Plugin
 type Route struct {
 	Router
 	Handler
