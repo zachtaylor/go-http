@@ -2,6 +2,7 @@ package ws
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 
 	"golang.org/x/net/websocket"
@@ -9,6 +10,8 @@ import (
 	"ztaylor.me/js"
 	"ztaylor.me/log"
 )
+
+var errSocketClosed = errors.New("socket closed")
 
 // Socket is a websocket connection
 type Socket struct {
@@ -70,61 +73,30 @@ func (socket *Socket) WriteJson(json js.Object) {
 }
 
 func (socket *Socket) watch(service *Service, h Handler) {
-	receiver := make(chan *Message, 1)
-	go log.Protect(func() {
-		for {
-			msg := socket.Listen()
-			if msg == nil {
-				close(receiver)
-				return
-			}
-			receiver <- msg
-		}
-	})
-
 	for {
-		select {
-		case msg, ok := <-receiver:
-			if ok {
-				h.ServeWS(socket, msg)
-			} else {
-				log.Protect(func() {
-					close(socket.done)
-				})
+		msg, err := socket.nextMessage()
+		if err != nil {
+			if err.Error() != "EOF" {
+				log.Add("Error", err).Error("http/ws: receive error")
 			}
-		case _, ok := <-socket.done:
-			if !ok {
-				service.Remove(socket.String())
-				return
-			}
+			service.Remove(socket.String())
+			close(socket.done)
+			return
 		}
+		h.ServeWS(socket, msg)
 	}
 }
 
-// Listen creates the next Message from the Socket by waiting forever
-func (socket *Socket) Listen() *Message {
+func (socket *Socket) nextMessage() (*Message, error) {
 	s := ""
 	msg := &Message{}
 	if socket == nil || socket.conn == nil {
-		log.Add("Socket", socket).Warn("http/ws: listen socket is nil")
-		return nil
+		return nil, errSocketClosed
 	} else if err := websocket.Message.Receive(socket.conn, &s); err != nil {
-		if err.Error() != "EOF" {
-			log.Add("Error", err).Error("http/ws: receive error")
-		}
-		return nil
+		return nil, err
 	} else if err := js.NewDecoder(bytes.NewBufferString(s)).Decode(&msg); err != nil {
-		log.WithFields(log.Fields{
-			"Socket": socket,
-			"Val":    s,
-			"Error":  err,
-		}).Error("http/ws: receive decode error")
-		return nil
+		return nil, err
 	}
 	msg.User = socket.GetUser()
-	log.WithFields(log.Fields{
-		"Socket":  socket,
-		"Message": msg,
-	}).Debug("http/ws: receive")
-	return msg
+	return msg, nil
 }
