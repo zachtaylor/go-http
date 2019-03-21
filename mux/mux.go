@@ -1,13 +1,8 @@
 package mux // import "ztaylor.me/http/mux"
 
-import (
-	"net/http"
-)
+import "net/http"
 
-// Mux is set of Plugins
-//
-// provides http.Handler
-// safely invokes each router, using Plugin.Router in the order added to choose Handler
+// Mux is slice of Plugin
 type Mux []Plugin
 
 // Plugin appends a Plugin to this Mux
