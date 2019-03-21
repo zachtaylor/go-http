@@ -1,0 +1,12 @@
+github.com/AaronO/go-git-http v0.0.0-20161214145340-1d9485b3a98f h1:x/RDwGRneK2/891S2o7KhZt3MhHMSCssoeDOfvolTMk=
+github.com/AaronO/go-git-http v0.0.0-20161214145340-1d9485b3a98f/go.mod h1:+6Yuq73F9068Na+mSBNXCvyuxvgw4f/g5ii40e3U8Sc=
+golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2 h1:VklqNMn3ovrHsnt90PveolxSbWFaJdECFbxSq0Mqo2M=
+golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
+golang.org/x/net v0.0.0-20190311183353-d8887717615a h1:oWX7TPOiFAMXLq8o0ikBYfCJVlRHBcsciT5bXOrH628=
+golang.org/x/net v0.0.0-20190311183353-d8887717615a/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
+golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+ztaylor.me/cast v0.0.2 h1:K9vtCRnIYzdEGmJypTSJAOzWzeRhiWT+41UYs35PPEs=
+ztaylor.me/cast v0.0.2/go.mod h1:G9ymn3cfJzslKFC0rnChiiDMJQoe8LOOyY1XzuDOFGQ=
+ztaylor.me/keygen v0.0.0 h1:RHkmznGmHhVU99DPtThniv2zLu2BshIlucNTk2/fh0o=
+ztaylor.me/keygen v0.0.0/go.mod h1:CRpXFEfX/Gw4lJLlgoVuiPy6DMypUp4VdRe1tlcZhXA=

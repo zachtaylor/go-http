@@ -1,8 +1,8 @@
 # ztaylor.me/http/...
 
-This serves as the root for related golang http utilities. This package is not intended to be used as a replacement for http.
+This package serves as the module root for related golang http libraries, and is not a replacement for `net/http`
 
-Version control for this package is hosted on my private source control server and mirrored on Github. Import paths using the Github links will not resolve because I have placed package import comments.
+Version control is hosted on my private server, and mirrored on Github
 
 ## Package `cookies`
 
@@ -10,26 +10,32 @@ Syntactic sugar to read/write cookie values
 
 ## Package `handlers`
 
-Provides additional `http.Handler` types
+Additional `http.Handler` types
+
+## Package `json`
+
+Easy encoding/decoding JSON objects
 
 ## Package `mux`
 
-Provides type `Router`, used to sort `*http.Request`
-
-Provides additional `Router` types
+Better request routing
 
 ## Package `mux/git`
 
-Provides git routes using `ztaylor.me/http/mux` and `github.com/AaronO/go-git-http`
+Server routes for git using `github.com/AaronO/go-git-http`
 
 ## Package `sessions`
 
-Provides session creation and management using `ztaylor.me/http/cookies`
+Session creation and management using `ztaylor.me/http/cookies`
+
+## Package `socket`
+
+Websocket server types, connection upgrader, optionally depends on `ztaylor.me/http/sessions`
 
 ## Package `track`
 
-Provides syntactic sugar and interfaces for tracking visitors by IP using `net/http`
+Track visitors with `net/http`
 
-## Package `ws`
+## Package `websocket`
 
 Provides websocket connection upgrader, and message handler/mux types
