@@ -6,13 +6,13 @@ import (
 	"ztaylor.me/http/cookies"
 )
 
-// CookieName is the string key SessionID
-const CookieName = "SessionID"
+// cookieName is the key "SessionID"
+const cookieName = "SessionID"
 
 func cookieWrite(w http.ResponseWriter, val string) {
-	cookies.Write(w, CookieName, val)
+	cookies.Write(w, cookieName, val)
 }
 
 func cookieRead(r *http.Request) (string, error) {
-	return cookies.Read(r, CookieName)
+	return cookies.Read(r, cookieName)
 }
