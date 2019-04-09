@@ -6,12 +6,12 @@ import (
 )
 
 // Encode wraps encoding/json.Marshal
-func Encode(v interface{}) string {
+func Encode(v interface{}) []byte {
 	data, err := json.Marshal(v)
 	if err != nil {
-		return "{\"json-error\": " + err.Error() + "}"
+		return []byte("{\"json-error\": \"" + err.Error() + "\"}")
 	}
-	return string(data)
+	return data
 }
 
 // Decode wraps encoding/json.Decoder.Decode
