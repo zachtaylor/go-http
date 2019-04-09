@@ -8,7 +8,7 @@ import (
 	"ztaylor.me/keygen"
 )
 
-// NewCache creates a sessions caching Service with expiry goroutine
+// NewCache creates a sessions caching Service and an expiry-monitor goroutine
 func NewCache(lifetime time.Duration) Service {
 	c := &Cache{
 		keygen: keygen.DefaultSettings,
@@ -22,59 +22,72 @@ func NewCache(lifetime time.Duration) Service {
 type Cache struct {
 	keygen keygen.Keygener
 	cache  map[string]*T
-	lock   sync.Mutex
+	lock   sync.Mutex // guards cache write
 }
 
 // Count returns number of active Sessions
-func (s *Cache) Count() int {
-	return len(s.cache)
-}
-
-// Get returns a Session by id, if any
-func (s *Cache) Get(id string) *T {
-	return s.cache[id]
+func (c *Cache) Count() int {
+	return len(c.cache)
 }
 
 // Cookie returns the Session reffered by cookies, if valid
-func (s *Cache) Cookie(r *http.Request) (t *T) {
+func (c *Cache) Cookie(r *http.Request) *T {
 	if cookie, err := cookieRead(r); err != nil {
-	} else if session := s.Get(cookie); session == nil {
+		// no cookie found
+	} else if session := c.Get(cookie); session == nil {
+		// cookie exists but session does not
 	} else {
-		t = session
+		return session
 	}
+	return nil
+}
+
+// Find returns a Session by name, if any
+func (c *Cache) Find(name string) (t *T) {
+	c.lock.Lock() // guards cache write
+	for _, s := range c.cache {
+		if name == s.Name() {
+			t = s // fill return buffer
+			break // go to unlock, return
+		}
+	}
+	c.lock.Unlock() // defer has overhead
 	return
+}
+
+// Get returns a Session by id, if any
+func (c *Cache) Get(id string) *T {
+	return c.cache[id]
 }
 
 // Grant returns a new Session granted to the username
-func (s *Cache) Grant(name string) (t *T) {
-	t = New(name)
-	s.lock.Lock()
-	t.id = s.keygen.Keygen()
-	for s.cache[t.id] != nil {
-		t.id = s.keygen.Keygen()
+func (c *Cache) Grant(name string) *T {
+	t := New(name)
+	c.lock.Lock() // guards cache write
+	for t.id = c.keygen.Keygen(); c.cache[t.id] != nil; t.id = c.keygen.Keygen() {
 	}
-	s.cache[t.id] = t
-	s.lock.Unlock()
-	return
+	c.cache[t.id] = t
+	c.lock.Unlock() // defer has overhead
+	return t
 }
 
 // watch monitors the Cache forever
-func (s *Cache) watch(d time.Duration) {
+func (c *Cache) watch(d time.Duration) {
 	tick := time.Minute
 	for now := range time.Tick(tick) {
-		s.lock.Lock()
-		for _, t := range s.cache {
+		c.lock.Lock() // guard cache write
+		for _, t := range c.cache {
 			if t.done == nil || now.Sub(t.Time()) > d {
-				go s.expire(t)
+				go c.expire(t) // awaits lock
 			}
 		}
-		s.lock.Unlock()
+		c.lock.Unlock() // avoids stack frame overhead
 	}
 }
 
-func (s *Cache) expire(t *T) {
-	s.lock.Lock()
-	delete(s.cache, t.id)
-	s.lock.Unlock()
-	t.Revoke()
+func (c *Cache) expire(t *T) {
+	c.lock.Lock() // guards cache write
+	delete(c.cache, t.id)
+	c.lock.Unlock() // defer has overhead
+	t.Close()
 }

@@ -51,8 +51,8 @@ func (t *T) UpdateTime() {
 	t.lock.Unlock()
 }
 
-// Revoke breaks the session voluntarily and immediately
-func (t *T) Revoke() {
+// Close closes the observe channel, and sets it to nil
+func (t *T) Close() {
 	t.lock.Lock()
 	if t.done != nil {
 		close(t.done)
