@@ -7,6 +7,7 @@ import (
 
 const goGetTpl = `<html>
 	<meta name="go-import" content="{{.Host}}/{{.Package}} git https://{{.Host}}/{{.Package}}">
+	<meta name="go-source" content="{{.Host}}/{{.Package}} https://{{.Host}}/{{.Package}} https://{{.Host}}/{{.Package}}/tree/master{/dir} https://{{.Host}}/{{.Package}}/tree/master{/dir}/{file}#L{line}">
 </html>`
 
 type goGetData struct {
@@ -14,8 +15,8 @@ type goGetData struct {
 	Package string
 }
 
-// GoGet returns a Handler that prints the minimum go-import data to
-// satisfy the `go get` tool for its' requested package
+// GoGet returns a Handler that prints data for the go tool to find go code
+// for any package requested with git at https at the host name
 func GoGet(host string) http.Handler {
 	t := template.Must(template.New("").Parse(goGetTpl))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
