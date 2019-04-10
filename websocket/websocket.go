@@ -14,18 +14,16 @@ import (
 // Service provides websocket server functionality
 type Service interface {
 	Handler
-	// New creates a Socket
-	New(string) *T
+	// New connects a websocket
+	Connect(*websocket.Conn)
+	// Count returns the number of open sockets
 	Count() int
-	Get(string) *T
-	Grant(string) *T
-	Revoke(string)
 }
 
 // UpgradeHandler provides a websocket handshake func
 func UpgradeHandler(s Service) http.Handler {
 	return websocket.Handler(func(c *websocket.Conn) {
-		New(c).watch(s)
+		s.Connect(c)
 	})
 }
 
@@ -44,6 +42,13 @@ func New(conn *websocket.Conn) *T {
 	}
 }
 
+// Key is RemoteAddr
+//
+// Since websockets block remote ports, it is guaranteed to be unique
+func (t *T) Key() string {
+	return t.conn.Request().RemoteAddr
+}
+
 // GetUser returns a non-empty string value to represent this websocket
 func (t *T) GetUser() string {
 	if t != nil && t.Session != nil {
@@ -55,9 +60,17 @@ func (t *T) GetUser() string {
 	}
 }
 
-// Done is an observable channel that indicates the socket has been closed
+// Done is an observable channel that closes when the socket has been closed
 func (t *T) Done() <-chan bool {
 	return t.done
+}
+
+// Close closes the observable channel
+func (t *T) Close() {
+	if t.done != nil {
+		close(t.done)
+		t.done = nil
+	}
 }
 
 // Write sends a buffer to the underlying websocket connection
@@ -67,25 +80,10 @@ func (t *T) Write(s []byte) {
 	}
 }
 
-func (t *T) String() string {
-	return "ws(" + t.GetUser() + ")://" + t.conn.Request().RemoteAddr
-}
+var errSocketClosed = errors.New("websocket closed")
 
-func (t *T) watch(service Service) {
-	for {
-		msg, err := t.nextMessage()
-		if err != nil {
-			service.Revoke(t.String())
-			close(t.done)
-			return
-		}
-		service.ServeWS(t, msg)
-	}
-}
-
-var errSocketClosed = errors.New("socket closed")
-
-func (t *T) nextMessage() (*Message, error) {
+// NextMessage reads a Message from the socket API
+func (t *T) NextMessage() (*Message, error) {
 	s, msg := "", &Message{}
 	if t == nil || t.conn == nil {
 		return nil, errSocketClosed
@@ -96,4 +94,8 @@ func (t *T) nextMessage() (*Message, error) {
 	}
 	msg.User = t.GetUser()
 	return msg, nil
+}
+
+func (t *T) String() string {
+	return "ws(" + t.GetUser() + ")://" + t.conn.Request().RemoteAddr
 }
