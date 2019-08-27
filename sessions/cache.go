@@ -25,21 +25,21 @@ type Cache struct {
 	lock   sync.Mutex // guards cache write
 }
 
-// Count returns number of active Sessions
-func (c *Cache) Count() int {
-	return len(c.cache)
-}
-
 // Cookie returns the Session reffered by cookies, if valid
-func (c *Cache) Cookie(r *http.Request) *T {
+func (c *Cache) Cookie(r *http.Request) (t *T) {
 	if cookie, err := cookieRead(r); err != nil {
 		// no cookie found
 	} else if session := c.Get(cookie); session == nil {
 		// cookie exists but session does not
 	} else {
-		return session
+		t = session
 	}
-	return nil
+	return
+}
+
+// Count returns number of active Sessions
+func (c *Cache) Count() int {
+	return len(c.cache)
 }
 
 // Find returns a Session by name, if any
@@ -71,6 +71,14 @@ func (c *Cache) Grant(name string) *T {
 	return t
 }
 
+// Remove removes a Session from the Cache, and closes the Session
+func (c *Cache) Remove(t *T) {
+	c.lock.Lock() // guards cache write
+	delete(c.cache, t.id)
+	c.lock.Unlock() // defer has overhead
+	t.Close()
+}
+
 // watch monitors the Cache forever
 func (c *Cache) watch(d time.Duration) {
 	tick := time.Minute
@@ -78,16 +86,9 @@ func (c *Cache) watch(d time.Duration) {
 		c.lock.Lock() // guard cache write
 		for _, t := range c.cache {
 			if t.done == nil || now.Sub(t.Time()) > d {
-				go c.expire(t) // awaits lock
+				go c.Remove(t) // awaits lock
 			}
 		}
-		c.lock.Unlock() // avoids stack frame overhead
+		c.lock.Unlock() // avoid stack frame and defer overhead
 	}
-}
-
-func (c *Cache) expire(t *T) {
-	c.lock.Lock() // guards cache write
-	delete(c.cache, t.id)
-	c.lock.Unlock() // defer has overhead
-	t.Close()
 }
