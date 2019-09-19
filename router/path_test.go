@@ -1,14 +1,14 @@
-package mux_test
+package router_test
 
 import (
 	"net/http/httptest"
 	"testing"
 
-	"ztaylor.me/http/mux"
+	"ztaylor.me/http/router"
 )
 
-func TestRouterPathStarts(t *testing.T) {
-	router := mux.RouterPathStarts("/hello/")
+func TestPathStarts(t *testing.T) {
+	router := router.PathStarts("/hello/")
 
 	r := httptest.NewRequest("", "/hello/", nil)
 

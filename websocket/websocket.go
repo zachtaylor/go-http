@@ -2,13 +2,13 @@ package websocket // import "ztaylor.me/http/websocket"
 
 import (
 	"bytes"
-	"errors"
+	"io"
 	"net/http"
 	"strings"
 
 	"golang.org/x/net/websocket"
 	"ztaylor.me/http/json"
-	"ztaylor.me/http/sessions"
+	"ztaylor.me/http/session"
 )
 
 // Service provides websocket server functionality
@@ -29,7 +29,7 @@ func UpgradeHandler(s Service) http.Handler {
 
 // T is a websocket connection
 type T struct {
-	Session *sessions.T
+	Session *session.T
 	conn    *websocket.Conn
 	done    chan bool
 }
@@ -80,13 +80,11 @@ func (t *T) Write(s []byte) {
 	}
 }
 
-var errSocketClosed = errors.New("websocket closed")
-
 // NextMessage reads a Message from the socket API
 func (t *T) NextMessage() (*Message, error) {
 	s, msg := "", &Message{}
 	if t == nil || t.conn == nil {
-		return nil, errSocketClosed
+		return nil, io.EOF
 	} else if err := websocket.Message.Receive(t.conn, &s); err != nil {
 		return nil, err
 	} else if err := json.Decode(bytes.NewBufferString(s), msg); err != nil {
@@ -94,6 +92,23 @@ func (t *T) NextMessage() (*Message, error) {
 	}
 	msg.User = t.GetUser()
 	return msg, nil
+}
+
+// NextChan creates a chan of *Message using NextMessage
+func (t *T) NextChan() chan *Message {
+	msgs := make(chan *Message)
+	go func() {
+		for { // loop
+			if msg, err := t.NextMessage(); err == nil {
+				msgs <- msg
+			} else if err == io.EOF {
+				t.Close()
+				break
+			}
+		} // loop
+		close(msgs)
+	}()
+	return msgs
 }
 
 func (t *T) String() string {

@@ -6,3 +6,5 @@ require (
 	ztaylor.me/cast v0.0.2
 	ztaylor.me/keygen v0.0.0
 )
+
+go 1.13

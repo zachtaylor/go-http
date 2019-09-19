@@ -1,4 +1,4 @@
-package sessions // import "ztaylor.me/http/sessions"
+package session // import "ztaylor.me/http/session"
 
 import (
 	"net/http"

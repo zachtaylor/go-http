@@ -1,7 +1,5 @@
 package websocket
 
-import "regexp"
-
 // Router tests a Message
 type Router interface {
 	Route(*Message) bool
@@ -12,48 +10,29 @@ type Handler interface {
 	ServeWS(*T, *Message)
 }
 
-// Plugin provides Router and Handler
-type Plugin interface {
-	Router
-	Handler
-}
-
-// Route is a pointer pair that implements Plugin
+// Route points to a pair of routing and handling logic
 type Route struct {
 	Router
 	Handler
 }
 
-// Mux is slice of Plugins
-type Mux []Plugin
+// Mux is slice of Route
+type Mux []*Route
 
 // ServeWS routes a message
 func (mux Mux) ServeWS(t *T, m *Message) {
-	for _, p := range mux {
-		if p.Route(m) {
-			go mux.callPlugin(p, t, m)
+	for _, r := range mux {
+		if r.Route(m) {
+			go mux.callRoute(r, t, m)
 			return
 		}
 	}
 }
 
-// callPlugin uses recover() to guard call to ServeWS
-func (mux Mux) callPlugin(p Plugin, t *T, m *Message) {
+// callRoute uses recover() to guard call to ServeWS
+func (mux Mux) callRoute(r *Route, t *T, m *Message) {
 	defer recover()
-	p.ServeWS(t, m)
-}
-
-// RouterSet is used to combine Routers into a single Router
-type RouterSet []Router
-
-// Route checks that all included Routers return true
-func (set RouterSet) Route(m *Message) bool {
-	for _, router := range set {
-		if router == nil || !router.Route(m) {
-			return false
-		}
-	}
-	return true
+	r.ServeWS(t, m)
 }
 
 // RouterFunc turns a func into a Router
@@ -70,19 +49,6 @@ type HandlerFunc func(*T, *Message)
 // ServeWS calls the HandlerFunc with m, which provides Handler
 func (h HandlerFunc) ServeWS(t *T, m *Message) {
 	h(t, m)
-}
-
-type routerRegex struct {
-	*regexp.Regexp
-}
-
-func (rgx *routerRegex) Route(m *Message) bool {
-	return rgx.MatchString(m.URI)
-}
-
-// RouterRegex creates a regexp match check against Message.Name
-func RouterRegex(s string) Router {
-	return &routerRegex{regexp.MustCompile(s)}
 }
 
 // RouterLit creates a literal match check against Message.Name
