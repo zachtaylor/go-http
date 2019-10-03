@@ -6,7 +6,7 @@ golang.org/x/net v0.0.0-20190311183353-d8887717615a h1:oWX7TPOiFAMXLq8o0ikBYfCJV
 golang.org/x/net v0.0.0-20190311183353-d8887717615a/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
-ztaylor.me/cast v0.0.2 h1:K9vtCRnIYzdEGmJypTSJAOzWzeRhiWT+41UYs35PPEs=
-ztaylor.me/cast v0.0.2/go.mod h1:G9ymn3cfJzslKFC0rnChiiDMJQoe8LOOyY1XzuDOFGQ=
+ztaylor.me/cast v0.0.3 h1:6v5cXNBXwv+cqWlyaBxr2hHFZNVU18VoQDAoQuKVWzY=
+ztaylor.me/cast v0.0.3/go.mod h1:p8ZQLnJl3eztST7dVCtbgRUbmxBzgNLW7pPFYTtwTEE=
 ztaylor.me/keygen v0.0.0 h1:RHkmznGmHhVU99DPtThniv2zLu2BshIlucNTk2/fh0o=
 ztaylor.me/keygen v0.0.0/go.mod h1:CRpXFEfX/Gw4lJLlgoVuiPy6DMypUp4VdRe1tlcZhXA=

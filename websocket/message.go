@@ -6,7 +6,7 @@ import "ztaylor.me/cast"
 type Message struct {
 	URI  string
 	User string
-	Data cast.Fields
+	Data cast.JSON
 }
 
 func (m Message) String() string {
