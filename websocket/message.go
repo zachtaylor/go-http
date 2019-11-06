@@ -9,6 +9,6 @@ type Message struct {
 	Data cast.JSON
 }
 
-func (m Message) String() string {
+func (m *Message) String() string {
 	return "websocket.Message{URI:" + m.URI + " User:" + m.User + " Fields:" + cast.StringI(len(m.Data)) + "}"
 }

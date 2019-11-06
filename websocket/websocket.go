@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"golang.org/x/net/websocket"
-	"ztaylor.me/http/json"
+	"ztaylor.me/cast"
 	"ztaylor.me/http/session"
 )
 
@@ -87,7 +87,7 @@ func (t *T) NextMessage() (*Message, error) {
 		return nil, io.EOF
 	} else if err := websocket.Message.Receive(t.conn, &s); err != nil {
 		return nil, err
-	} else if err := json.Decode(bytes.NewBufferString(s), msg); err != nil {
+	} else if err := cast.DecodeJSON(bytes.NewBufferString(s), msg); err != nil {
 		return nil, err
 	}
 	msg.User = t.GetUser()
