@@ -1,20 +1,15 @@
 package websocket
 
 import (
-	"errors"
+	"time"
 
 	"golang.org/x/net/websocket"
+	"ztaylor.me/cast/charset"
 	"ztaylor.me/http/session"
+	"ztaylor.me/keygen"
 )
 
-// ErrSocketKeyExists is returned by Cache.Store when the key is duplicate
-var ErrSocketKeyExists = errors.New("socket key exists")
-
 // Cache implements Service
-//
-// Adds 2 hooks for connection
-// 1) Message.URI = "/connect"
-// 2) Message.URI = "/disconnect"
 type Cache struct {
 	sessions session.Service
 	cache    map[string]*T
@@ -34,25 +29,49 @@ func _cacheIsService(c *Cache) Service {
 }
 
 // Connect connects a websocket
+//
+// Adds 3 hooks
+//
+// 1) Server Request Message.URI = "/connect"
+//
+// 2) Server Request Message.URI = "/disconnect"
+//
+// 3) Client Request Message.URI = "/ping"
+//
 func (c *Cache) Connect(conn *websocket.Conn) {
 	t := New(conn)
-	if c.sessions != nil {
-		if s := c.sessions.Cookie(conn.Request()); s != nil {
-			t.Session = s
+	if c.sessions == nil {
+	} else if s := c.sessions.Cookie(conn.Request()); s != nil {
+		t.Session = s
+	}
+	for t.ID == "" || c.cache[t.ID] != nil {
+		t.ID = keygen.New(16, charset.AlphaCapitalNumeric, keygen.DefaultSettings.Rand)
+	}
+	c.cache[t.ID] = t
+	c.ServeWS(t, NewMessage("/connect", nil))
+	c.watch(t)
+	c.ServeWS(t, NewMessage("/disconnect", nil))
+}
+
+// watch monitors *T, and sends "/ping" when it gets lonely
+func (c *Cache) watch(t *T) {
+	pingTimeout := time.Minute
+	for next, pingTimer := t.NextChan(), time.NewTimer(pingTimeout); ; {
+		select {
+		case <-pingTimer.C:
+			if t.conn != nil {
+				return
+			}
+			t.Message("/ping", nil)
+		case msg := <-next:
+			if msg == nil {
+				pingTimer.Stop()
+				return
+			}
+			pingTimer.Reset(pingTimeout)
+			go c.ServeWS(t, msg)
 		}
 	}
-	c.cache[t.Key()] = t
-	c.ServeWS(t, &Message{
-		URI:  "/connect",
-		User: t.GetUser(),
-	})
-	for msg := range t.NextChan() {
-		c.ServeWS(t, msg)
-	}
-	c.ServeWS(t, &Message{
-		URI:  "/disconnect",
-		User: t.GetUser(),
-	})
 }
 
 // Count returns the number of open sockets

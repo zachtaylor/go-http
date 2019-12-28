@@ -1,34 +1,14 @@
 package websocket // import "ztaylor.me/http/websocket"
 
 import (
-	"bytes"
-	"io"
-	"net/http"
-	"strings"
-
 	"golang.org/x/net/websocket"
 	"ztaylor.me/cast"
 	"ztaylor.me/http/session"
 )
 
-// Service provides websocket server functionality
-type Service interface {
-	Handler
-	// New connects a websocket
-	Connect(*websocket.Conn)
-	// Count returns the number of open sockets
-	Count() int
-}
-
-// UpgradeHandler provides a websocket handshake func
-func UpgradeHandler(s Service) http.Handler {
-	return websocket.Handler(func(c *websocket.Conn) {
-		s.Connect(c)
-	})
-}
-
 // T is a websocket connection
 type T struct {
+	ID      string
 	Session *session.T
 	conn    *websocket.Conn
 	done    chan bool
@@ -39,24 +19,6 @@ func New(conn *websocket.Conn) *T {
 	return &T{
 		conn: conn,
 		done: make(chan bool),
-	}
-}
-
-// Key is RemoteAddr
-//
-// Since websockets block remote ports, it is guaranteed to be unique
-func (t *T) Key() string {
-	return t.conn.Request().RemoteAddr
-}
-
-// GetUser returns a non-empty string value to represent this websocket
-func (t *T) GetUser() string {
-	if t != nil && t.Session != nil {
-		return t.Session.Name()
-	} else if i := strings.LastIndex(t.conn.Request().RemoteAddr, ":"); i < 0 {
-		return "anon"
-	} else {
-		return "anon#" + t.conn.Request().RemoteAddr[i+1:]
 	}
 }
 
@@ -73,10 +35,20 @@ func (t *T) Close() {
 	}
 }
 
+// Message is a macro for WriteMessage(NewMessage)
+func (t *T) Message(uri string, json cast.JSON) {
+	t.WriteMessage(NewMessage(uri, json))
+}
+
+// WriteMessage calls Write with cast []byte Message.JSON().String()
+func (t *T) WriteMessage(m *Message) {
+	t.Write(cast.BytesS(m.JSON().String()))
+}
+
 // Write sends a buffer to the underlying websocket connection
 func (t *T) Write(s []byte) {
-	if t.conn != nil {
-		websocket.Message.Send(t.conn, s)
+	if conn := t.conn; conn != nil {
+		go websocket.Message.Send(conn, s)
 	}
 }
 
@@ -84,13 +56,12 @@ func (t *T) Write(s []byte) {
 func (t *T) NextMessage() (*Message, error) {
 	s, msg := "", &Message{}
 	if t == nil || t.conn == nil {
-		return nil, io.EOF
+		return nil, cast.EOF
 	} else if err := websocket.Message.Receive(t.conn, &s); err != nil {
 		return nil, err
-	} else if err := cast.DecodeJSON(bytes.NewBufferString(s), msg); err != nil {
+	} else if err := cast.DecodeJSON(cast.NewBuffer(s), msg); err != nil {
 		return nil, err
 	}
-	msg.User = t.GetUser()
 	return msg, nil
 }
 
@@ -101,7 +72,7 @@ func (t *T) NextChan() chan *Message {
 		for { // loop
 			if msg, err := t.NextMessage(); err == nil {
 				msgs <- msg
-			} else if err == io.EOF {
+			} else if err == cast.EOF {
 				t.Close()
 				break
 			}
@@ -112,5 +83,5 @@ func (t *T) NextChan() chan *Message {
 }
 
 func (t *T) String() string {
-	return "ws(" + t.GetUser() + ")://" + t.conn.Request().RemoteAddr
+	return "websocket.T{" + t.conn.Request().RemoteAddr + "}"
 }
