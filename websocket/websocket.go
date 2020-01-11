@@ -11,6 +11,8 @@ type T struct {
 	ID      string
 	Session *session.T
 	conn    *websocket.Conn
+	send    chan []byte
+	recv    <-chan *Message
 	done    chan bool
 }
 
@@ -18,70 +20,58 @@ type T struct {
 func New(conn *websocket.Conn) *T {
 	return &T{
 		conn: conn,
+		send: make(chan []byte),
+		recv: ReadMessageChan(conn),
 		done: make(chan bool),
 	}
 }
 
-// Done is an observable channel that closes when the socket has been closed
-func (t *T) Done() <-chan bool {
+func (t *T) String() string {
+	return "websocket.T{" + t.conn.Request().RemoteAddr + "}"
+}
+
+// SendChan is a writable channel that queues writes to the websocket API
+func (t *T) SendChan() chan<- []byte {
+	return t.send
+}
+
+// ReceiveChan returns the
+func (t *T) ReceiveChan() <-chan *Message {
+	return t.recv
+}
+
+// DoneChan is an observable channel that closes when the socket has been closed
+func (t *T) DoneChan() <-chan bool {
 	return t.done
 }
 
 // Close closes the observable channel
 func (t *T) Close() {
 	if t.done != nil {
+		close(t.send)
+		t.send = nil
+		// close(t.recv) // closed elsewhere
+		t.recv = nil
 		close(t.done)
 		t.done = nil
 	}
 }
 
-// Message is a macro for WriteMessage(NewMessage)
+// Message is a macro for SendMessage(NewMessage)
 func (t *T) Message(uri string, json cast.JSON) {
-	t.WriteMessage(NewMessage(uri, json))
+	t.SendMessage(NewMessage(uri, json))
 }
 
-// WriteMessage calls Write with cast []byte Message.JSON().String()
-func (t *T) WriteMessage(m *Message) {
-	t.Write(cast.BytesS(m.JSON().String()))
+// SendMessage is a macro for Send(m.json bytes)
+func (t *T) SendMessage(m *Message) {
+	t.Send(cast.BytesS(m.JSON().String()))
 }
 
-// Write sends a buffer to the underlying websocket connection
-func (t *T) Write(s []byte) {
-	if conn := t.conn; conn != nil {
-		go websocket.Message.Send(conn, s)
-	}
-}
-
-// NextMessage reads a Message from the socket API
-func (t *T) NextMessage() (*Message, error) {
-	s, msg := "", &Message{}
-	if t == nil || t.conn == nil {
-		return nil, cast.EOF
-	} else if err := websocket.Message.Receive(t.conn, &s); err != nil {
-		return nil, err
-	} else if err := cast.DecodeJSON(cast.NewBuffer(s), msg); err != nil {
-		return nil, err
-	}
-	return msg, nil
-}
-
-// NextChan creates a chan of *Message using NextMessage
-func (t *T) NextChan() chan *Message {
-	msgs := make(chan *Message)
+// Send starts a goroutine to push to send chan
+func (t *T) Send(buff []byte) {
 	go func() {
-		for { // loop
-			if msg, err := t.NextMessage(); err == nil {
-				msgs <- msg
-			} else if err == cast.EOF {
-				t.Close()
-				break
-			}
-		} // loop
-		close(msgs)
+		if t.send != nil {
+			t.send <- buff
+		}
 	}()
-	return msgs
-}
-
-func (t *T) String() string {
-	return "websocket.T{" + t.conn.Request().RemoteAddr + "}"
 }

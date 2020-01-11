@@ -8,6 +8,7 @@ type Message struct {
 	Data cast.JSON
 }
 
+// NewMessage creates a Message
 func NewMessage(uri string, json cast.JSON) *Message {
 	return &Message{
 		URI:  uri,
@@ -15,6 +16,7 @@ func NewMessage(uri string, json cast.JSON) *Message {
 	}
 }
 
+// JSON implements conversion to JSON data
 func (m *Message) JSON() cast.JSON {
 	if m == nil {
 		return nil

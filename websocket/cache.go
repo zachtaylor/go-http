@@ -1,14 +1,15 @@
 package websocket
 
 import (
-	"time"
-
 	"golang.org/x/net/websocket"
 	"ztaylor.me/cast"
 	"ztaylor.me/cast/charset"
 	"ztaylor.me/http/session"
 	"ztaylor.me/keygen"
 )
+
+// heatline tunes what cache considers excessive input (starts at 0)
+var heatline = 2
 
 // Cache implements Service
 type Cache struct {
@@ -53,7 +54,7 @@ func (c *Cache) Connect(conn *websocket.Conn) {
 	c.cache[t.ID] = t
 	c.lock.Unlock()
 	c.ServeWS(t, NewMessage("/connect", nil))
-	c.watch(t)
+	watch(c, t)
 	c.ServeWS(t, NewMessage("/disconnect", nil))
 	c.lock.Lock()
 	delete(c.cache, t.ID)
@@ -74,30 +75,9 @@ func (c *Cache) SendMessage(m *Message) {
 func (c *Cache) Send(s []byte) {
 	c.lock.Lock()
 	for _, socket := range c.cache {
-		socket.Write(s)
+		socket.Send(s)
 	}
 	c.lock.Unlock()
-}
-
-// watch monitors *T, and sends "/ping" when it gets lonely
-func (c *Cache) watch(t *T) {
-	pingTimeout := time.Minute
-	for next, pingTimer := t.NextChan(), time.NewTimer(pingTimeout); ; {
-		select {
-		case <-pingTimer.C:
-			if t.conn == nil {
-				return
-			}
-			t.Message("/ping", nil)
-		case msg := <-next:
-			if msg == nil {
-				pingTimer.Stop()
-				return
-			}
-			pingTimer.Reset(pingTimeout)
-			go c.ServeWS(t, msg)
-		}
-	}
 }
 
 // Count returns the number of open sockets
