@@ -11,19 +11,26 @@ var lonely = cast.BytesS(`{"uri":"/ping"}`)
 
 // watch performs socket i/o and sends when it gets lonely
 func watch(service Service, t *T) {
-	for heat, pingTimer := 0, cast.NewTimer(pingTimeout); ; {
+	for heat, pingTimer, resetCD := 0, cast.NewTimer(pingTimeout), cast.Now(); ; {
 		select {
 		case <-pingTimer.C:
 			t.Send(lonely) // falls onto send chan
+			pingTimer.Reset(pingTimeout)
 		case buff := <-t.send:
 			if heat > 0 {
 				heat--
 			}
-			if !pingTimer.Stop() {
-				<-pingTimer.C
+			if now := cast.Now(); now.Sub(resetCD) > cast.Second {
+				if !pingTimer.Stop() {
+					<-pingTimer.C
+				}
+				pingTimer.Reset(pingTimeout)
+				resetCD = now
 			}
-			pingTimer.Reset(pingTimeout)
 			if err := websocket.Message.Send(t.conn, buff); err != nil {
+				if !pingTimer.Stop() {
+					<-pingTimer.C
+				}
 				go drainMessageChan(t.recv)
 				t.Close()
 				return
@@ -33,9 +40,15 @@ func watch(service Service, t *T) {
 				if !pingTimer.Stop() {
 					<-pingTimer.C
 				}
-				pingTimer.Reset(pingTimeout)
 				t.Close()
 				return
+			}
+			if now := cast.Now(); now.Sub(resetCD) > cast.Second {
+				if !pingTimer.Stop() {
+					<-pingTimer.C
+				}
+				pingTimer.Reset(pingTimeout)
+				resetCD = now
 			}
 			if heat > heatline {
 				<-cast.After(cast.Duration(heat-heatline) * 100 * cast.Millisecond)
