@@ -12,10 +12,6 @@ Syntactic sugar to read/write cookie values
 
 Additional `http.Handler` types
 
-## Package `json`
-
-Easy encoding/decoding JSON objects
-
 ## Package `mux`
 
 Better request routing
@@ -28,14 +24,10 @@ Server routes for git using `github.com/AaronO/go-git-http`
 
 Session creation and management using `ztaylor.me/http/cookies`
 
-## Package `socket`
-
-Websocket server types, connection upgrader, optionally depends on `ztaylor.me/http/sessions`
-
 ## Package `track`
 
 Track visitors with `net/http`
 
 ## Package `websocket`
 
-Provides websocket connection upgrader, and message handler/mux types
+Websocket server types, connection upgrader, uses `ztaylor.me/http/sessions`
