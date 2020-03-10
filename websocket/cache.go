@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"golang.org/x/net/websocket"
 	"ztaylor.me/cast"
 	"ztaylor.me/cast/charset"
 	"ztaylor.me/http/session"
@@ -41,7 +40,7 @@ func _cacheIsService(c *Cache) Service {
 //
 // 3) Client Request Message.URI = "/ping"
 //
-func (c *Cache) Connect(conn *websocket.Conn) {
+func (c *Cache) Connect(conn *Conn) {
 	t := New(conn)
 	if c.sessions == nil {
 	} else if s := c.sessions.Cookie(conn.Request()); s != nil {

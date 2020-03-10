@@ -1,14 +1,11 @@
 package websocket
 
-import (
-	"golang.org/x/net/websocket"
-	"ztaylor.me/cast"
-)
+import "ztaylor.me/cast"
 
 // ReadMessage reads a Message from the socket API
-func ReadMessage(conn *websocket.Conn) (*Message, error) {
+func ReadMessage(conn *Conn) (*Message, error) {
 	s, msg := "", &Message{}
-	if err := websocket.Message.Receive(conn, &s); err != nil {
+	if err := Codec.Receive(conn, &s); err != nil {
 		return nil, err
 	} else if err := cast.DecodeJSON(cast.NewBuffer(s), msg); err != nil {
 		return nil, err
@@ -17,7 +14,7 @@ func ReadMessage(conn *websocket.Conn) (*Message, error) {
 }
 
 // ReadMessageChan creates a goroutine monitor using ReadMessage
-func ReadMessageChan(conn *websocket.Conn) chan *Message {
+func ReadMessageChan(conn *Conn) chan *Message {
 	msgs := make(chan *Message)
 	go func() {
 		for {
@@ -32,7 +29,7 @@ func ReadMessageChan(conn *websocket.Conn) chan *Message {
 	return msgs
 }
 
-// drainMessageChan waits to drink every message and then return
+// drainMessageChan waits to receive all messages, and returns when it reaches the end
 func drainMessageChan(msgs <-chan *Message) {
 	for {
 		_, ok := <-msgs

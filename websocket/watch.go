@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"golang.org/x/net/websocket"
 	"ztaylor.me/cast"
 )
 
@@ -27,7 +26,7 @@ func watch(service Service, t *T) {
 				pingTimer.Reset(pingTimeout)
 				resetCD = now
 			}
-			if err := websocket.Message.Send(t.conn, buff); err != nil {
+			if err := Codec.Send(t.conn, buff); err != nil {
 				if !pingTimer.Stop() {
 					<-pingTimer.C
 				}

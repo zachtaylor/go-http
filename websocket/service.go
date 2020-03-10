@@ -1,15 +1,12 @@
 package websocket
 
-import (
-	"golang.org/x/net/websocket"
-	"ztaylor.me/cast"
-)
+import "ztaylor.me/cast"
 
 // Service provides websocket server functionality
 type Service interface {
 	Handler
 	// New connects a websocket
-	Connect(*websocket.Conn)
+	Connect(*Conn)
 	// Count returns the number of open sockets
 	Count() int
 	// Message is a macro for SendMessage(NewMessage)

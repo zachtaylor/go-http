@@ -6,18 +6,24 @@ import (
 	"ztaylor.me/http/session"
 )
 
+// Conn = websocket.Conn
+type Conn = websocket.Conn
+
+// Codec = websocket.Message
+var Codec = websocket.Message
+
 // T is a websocket connection
 type T struct {
 	ID      string
 	Session *session.T
-	conn    *websocket.Conn
+	conn    *Conn
 	send    chan []byte
 	recv    <-chan *Message
 	done    chan bool
 }
 
 // New creates an initialied orphan websocket
-func New(conn *websocket.Conn) *T {
+func New(conn *Conn) *T {
 	return &T{
 		conn: conn,
 		send: make(chan []byte),
@@ -30,12 +36,12 @@ func (t *T) String() string {
 	return "websocket.T{" + t.conn.Request().RemoteAddr + "}"
 }
 
-// SendChan is a writable channel that queues writes to the websocket API
+// SendChan is a write-only channel used to send data on this websocket
 func (t *T) SendChan() chan<- []byte {
 	return t.send
 }
 
-// ReceiveChan returns the
+// ReceiveChan is a read-only channel used to receive Messages from this websocket
 func (t *T) ReceiveChan() <-chan *Message {
 	return t.recv
 }
@@ -50,7 +56,7 @@ func (t *T) Close() {
 	if t.done != nil {
 		close(t.send)
 		t.send = nil
-		// close(t.recv) // closed elsewhere
+		// close(t.recv) // closed by ReadMessageChan
 		t.recv = nil
 		close(t.done)
 		t.done = nil
