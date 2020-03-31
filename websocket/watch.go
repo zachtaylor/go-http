@@ -4,7 +4,7 @@ import "time"
 
 var pingTimeout = time.Minute
 
-var lonely []byte = `{"uri":"/ping"}`
+var lonely []byte = []byte(`{"uri":"/ping"}`)
 
 // watch performs socket i/o and sends when it gets lonely
 func watch(service Service, t *T) {

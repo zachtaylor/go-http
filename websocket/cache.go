@@ -40,7 +40,7 @@ func NewCache(sessions session.Service) Service {
 func (c *Cache) Connect(conn *Conn) {
 	t := New(conn)
 	if c.sessions == nil {
-	} else if s := c.sessions.Cookie(conn.Request()); s != nil {
+	} else if s, _ := c.sessions.Cookie(conn.Request()); s != nil {
 		t.Session = s
 	}
 	c.lock.Lock()
