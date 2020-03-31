@@ -6,7 +6,7 @@ import (
 	"ztaylor.me/http/cookies"
 )
 
-// cookieName is the key "SessionID"
+// cookieName is the string "SessionID"
 const cookieName = "SessionID"
 
 func cookieWrite(w http.ResponseWriter, val string) {

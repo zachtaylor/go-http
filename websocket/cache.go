@@ -19,15 +19,12 @@ type Cache struct {
 }
 
 // NewCache builds a Cache, required for internals
-func NewCache(sessions session.Service) *Cache {
+func NewCache(sessions session.Service) Service {
 	return &Cache{
 		sessions: sessions,
 		cache:    make(map[string]*T),
 		mux:      make(Mux, 0),
 	}
-}
-func _cacheIsService(c *Cache) Service {
-	return c
 }
 
 // Connect connects a websocket

@@ -2,74 +2,89 @@ package session // import "ztaylor.me/http/session"
 
 import (
 	"net/http"
-	"sync"
 	"time"
 )
-
-// New creates an initialized orphan Session
-func New(name string) *T {
-	return &T{
-		name: name,
-		time: time.Now(),
-		done: make(chan bool),
-	}
-}
 
 // T is a Session
 type T struct {
 	id   string
 	name string
-	time time.Time
+	in   chan bool
 	done chan bool
-	lock sync.Mutex
 }
 
-// ID returns the SessionID
+// New creates an initialized orphan Session
+func New(id, name string, d time.Duration) (t *T) {
+	t = &T{
+		id:   id,
+		name: name,
+		in:   make(chan bool),
+		done: make(chan bool),
+	}
+	go t.watch(d)
+	return
+}
+
+// ID returns the Session ID
 func (t *T) ID() string {
 	return t.id
 }
 
-// Name returns the original name of the session
+// Name returns the name of this Session
 func (t *T) Name() string {
 	return t.name
 }
 
-// Time returns the auth time
-func (t *T) Time() time.Time {
-	return t.time
+// Refresh sends a refresh signal
+func (t *T) Refresh() {
+	go t.send(true)
 }
 
-// Done returns the observe channel, or nil if the session is already closed
+// Close sends a close signal
+func (t *T) Close() {
+	go t.send(false)
+}
+
+// Done returns the observe channel, or nil if the Session is already closed
 func (t *T) Done() <-chan bool {
 	return t.done
 }
 
-// UpdateTime is used to reset the auth time
-func (t *T) UpdateTime() {
-	t.lock.Lock()
-	t.time = time.Now()
-	t.lock.Unlock()
-}
-
-// Close closes the observe channel, and sets it to nil
-func (t *T) Close() {
-	t.lock.Lock()
-	if t.done != nil {
-		close(t.done)
-		t.done = nil
-	}
-	t.lock.Unlock()
-}
-
-// String returns a string representation of the session
+// String returns a string representation of this Session
 func (t *T) String() string {
 	if t == nil {
-		return "(nil)"
+		return "nil"
 	}
-	return "SessionID#" + t.id
+	return "Session#" + t.id
 }
 
-// WriteCookie is a convenience to write response header with this SessionID
+func (t *T) send(ok bool) {
+	t.in <- ok
+}
+func (t *T) close() {
+	close(t.in)
+	close(t.done)
+}
+func (t *T) watch(d time.Duration) {
+	defer t.close()
+	timer := time.NewTimer(d)
+	for {
+		select {
+		case ok := <-t.in:
+			if !timer.Stop() { // fail to stop
+				<-timer.C // drain the channel
+			}
+			if !ok {
+				return
+			}
+			timer.Reset(d)
+		case <-timer.C:
+			return
+		}
+	}
+}
+
+// WriteCookie is a convenience to write SessionID header cookie
 func (t *T) WriteCookie(w http.ResponseWriter) {
 	if t != nil {
 		cookieWrite(w, t.id)
@@ -78,7 +93,7 @@ func (t *T) WriteCookie(w http.ResponseWriter) {
 	}
 }
 
-// EraseSessionID writes a SessionID header that is empty value
+// EraseSessionID writes a SessionID header cookie that is empty value
 func EraseSessionID(w http.ResponseWriter) {
 	cookieWrite(w, "")
 }

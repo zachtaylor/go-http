@@ -8,7 +8,7 @@ golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a h1:1BGLXjeY4akVXGgbC9HugT3Jv
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
-ztaylor.me/cast v0.0.10 h1:vOFs8jFN/aPPL5VzQRhouWajs32sXrMKhLPpJcKEfxs=
-ztaylor.me/cast v0.0.10/go.mod h1:p8ZQLnJl3eztST7dVCtbgRUbmxBzgNLW7pPFYTtwTEE=
-ztaylor.me/keygen v0.0.5 h1:/ylLa3GUriZQS1GbFYppZkrZjTrTjP6/qRSwFXHBNyI=
-ztaylor.me/keygen v0.0.5/go.mod h1:AtPZYUCfXVhnNLoPnb+O5FI5VfRCm5ph67tZdNwjhBU=
+ztaylor.me/cast v0.0.11 h1:p1SUbuHQ/mfpjckRXMu/e/6nzNPiZc2Z8aidJdr4LHg=
+ztaylor.me/cast v0.0.11/go.mod h1:p8ZQLnJl3eztST7dVCtbgRUbmxBzgNLW7pPFYTtwTEE=
+ztaylor.me/keygen v0.0.6 h1:IHYomrNYNN9akYIJRW1zatnsdANlfzSDjGh7SHVKgAk=
+ztaylor.me/keygen v0.0.6/go.mod h1:6dzAeovTsa5Ju+QEmaySCpISlLit74X1wYxRiIeShKg=

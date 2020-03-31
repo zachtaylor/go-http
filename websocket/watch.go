@@ -1,16 +1,14 @@
 package websocket
 
-import (
-	"ztaylor.me/cast"
-)
+import "time"
 
-var pingTimeout = cast.Minute
+var pingTimeout = time.Minute
 
-var lonely = cast.BytesS(`{"uri":"/ping"}`)
+var lonely []byte = `{"uri":"/ping"}`
 
 // watch performs socket i/o and sends when it gets lonely
 func watch(service Service, t *T) {
-	for heat, pingTimer, resetCD := 0, cast.NewTimer(pingTimeout), cast.Now(); ; {
+	for heat, pingTimer, resetCD := 0, time.NewTimer(pingTimeout), time.Now(); ; {
 		select {
 		case <-pingTimer.C:
 			t.Send(lonely) // falls onto send chan
@@ -19,7 +17,7 @@ func watch(service Service, t *T) {
 			if heat > 0 {
 				heat--
 			}
-			if now := cast.Now(); now.Sub(resetCD) > cast.Second {
+			if now := time.Now(); now.Sub(resetCD) > time.Second {
 				if !pingTimer.Stop() {
 					<-pingTimer.C
 				}
@@ -42,7 +40,7 @@ func watch(service Service, t *T) {
 				t.Close()
 				return
 			}
-			if now := cast.Now(); now.Sub(resetCD) > cast.Second {
+			if now := time.Now(); now.Sub(resetCD) > time.Second {
 				if !pingTimer.Stop() {
 					<-pingTimer.C
 				}
@@ -50,7 +48,7 @@ func watch(service Service, t *T) {
 				resetCD = now
 			}
 			if heat > heatline {
-				<-cast.After(cast.Duration(heat-heatline) * 100 * cast.Millisecond)
+				<-time.After(time.Duration(heat-heatline) * 100 * time.Millisecond)
 				heat--
 			}
 			heat++
