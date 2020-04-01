@@ -19,7 +19,7 @@ type Cache struct {
 }
 
 // NewCache builds a Cache, required for internals
-func NewCache(sessions session.Service) Service {
+func NewCache(sessions session.Service) *Cache {
 	return &Cache{
 		sessions: sessions,
 		cache:    make(map[string]*T),
