@@ -6,7 +6,7 @@ var pingTimeout = time.Minute
 
 var lonely []byte = []byte(`{"uri":"/ping"}`)
 
-// watch performs socket i/o and sends when it gets lonely
+// watch performs socket i/o and sends when lonely
 func watch(service Service, t *T) {
 	for heat, pingTimer, resetCD := 0, time.NewTimer(pingTimeout), time.Now(); ; {
 		select {
@@ -17,7 +17,7 @@ func watch(service Service, t *T) {
 			if heat > 0 {
 				heat--
 			}
-			if now := time.Now(); now.Sub(resetCD) > time.Second {
+			if now := time.Now(); now.Sub(resetCD) > time.Second { // pingTimer.Reset on write effect has a 1 sec cooldown
 				if !pingTimer.Stop() {
 					<-pingTimer.C
 				}

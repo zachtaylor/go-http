@@ -74,9 +74,9 @@ func (t *T) watch(d time.Duration) {
 			if !timer.Stop() { // fail to stop
 				<-timer.C // drain the channel
 			}
-			if !ok {
+			if !ok { // signal close
 				return
-			}
+			} // signal refresh
 			timer.Reset(d)
 		case <-timer.C:
 			return
