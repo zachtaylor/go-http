@@ -74,7 +74,19 @@ func (c *Cache) Grant(name string) (t *T) {
 	t = New(id, name, c.life)
 	c.cache[id] = t
 	c.lock.Unlock()
+	go c.watch(t)
 	return
+}
+
+// watch waits until session is done, to remove it from the cache
+func (c *Cache) watch(t *T) {
+	for done := t.Done(); ; {
+		_, ok := <-done
+		if !ok {
+			break
+		}
+	}
+	c.Remove(t)
 }
 
 // Remove removes a Session from the Cache, and closes the Session
