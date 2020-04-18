@@ -6,8 +6,8 @@ import (
 )
 
 const goGetTpl = `<html>
-	<meta name="go-import" content="{{.Host}}/{{.Package}} git https://{{.Host}}/{{.Package}}">
-	<meta name="go-source" content="{{.Host}}/{{.Package}} https://{{.Host}}/{{.Package}} https://{{.Host}}/{{.Package}}/tree/master{/dir} https://{{.Host}}/{{.Package}}/tree/master{/dir}/{file}#L{line}">
+	<meta name="go-import" content="{{.Host}}/{{.Package}} git git://{{.Host}}/{{.Package}}">
+	<meta name="go-source" content="{{.Host}}/{{.Package}} git://{{.Host}}/{{.Package}} https://{{.Host}}/{{.Package}}/tree/master{/dir} https://{{.Host}}/{{.Package}}/tree/master{/dir}/{file}#L{line}">
 </html>`
 
 type goGetData struct {
