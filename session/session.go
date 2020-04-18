@@ -85,15 +85,15 @@ func (t *T) watch(d time.Duration) {
 }
 
 // WriteCookie is a convenience to write SessionID header cookie
-func (t *T) WriteCookie(w http.ResponseWriter) {
+func (t *T) WriteCookie(w http.ResponseWriter, secure bool) {
 	if t != nil {
-		cookieWrite(w, t.id)
+		cookieWrite(w, t.id, secure)
 	} else {
-		EraseSessionID(w)
+		cookieErase(w, secure)
 	}
 }
 
 // EraseSessionID writes a SessionID header cookie that is empty value
-func EraseSessionID(w http.ResponseWriter) {
-	cookieWrite(w, "")
+func EraseSessionID(w http.ResponseWriter, secure bool) {
+	cookieErase(w, secure)
 }
