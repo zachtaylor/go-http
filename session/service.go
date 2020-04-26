@@ -14,6 +14,4 @@ type Service interface {
 	Find(string) *T
 	// Grant returns a new Session granted to the username
 	Grant(string) *T
-	// Remove removes a session
-	Remove(*T)
 }

@@ -86,13 +86,7 @@ func (c *Cache) watch(t *T) {
 			break
 		}
 	}
-	c.Remove(t)
-}
-
-// Remove removes a Session from the Cache, and closes the Session
-func (c *Cache) Remove(t *T) {
 	c.lock.Lock() // guards cache write
 	delete(c.cache, t.id)
 	c.lock.Unlock()
-	t.Close()
 }
