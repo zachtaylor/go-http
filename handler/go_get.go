@@ -15,8 +15,7 @@ type goGetData struct {
 	Package string
 }
 
-// GoGet returns a Handler that prints data for the go tool to find go code
-// for any package requested with git at https at the host name
+// GoGet returns a Handler that writes data for the go tool to find code using go get
 func GoGet(host string) http.Handler {
 	t := template.Must(template.New("").Parse(goGetTpl))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
