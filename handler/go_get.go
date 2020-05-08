@@ -6,8 +6,8 @@ import (
 )
 
 const goGetTpl = `<html>
-	<meta name="go-import" content="{{.Host}}/{{.Package}} git git://{{.Host}}/{{.Package}}">
-	<meta name="go-source" content="{{.Host}}/{{.Package}} git://{{.Host}}/{{.Package}} https://{{.Host}}/{{.Package}}/tree/master{/dir} https://{{.Host}}/{{.Package}}/tree/master{/dir}/{file}#L{line}">
+	<meta name="go-import" content="{{.Host}}/{{.Package}} git https://{{.Host}}/{{.Package}}">
+	<meta name="go-source" content="{{.Host}}/{{.Package}} https://{{.Host}}/{{.Package}} https://{{.Host}}/{{.Package}}/tree/master{/dir} https://{{.Host}}/{{.Package}}/tree/master{/dir}/{file}#L{line}">
 </html>`
 
 type goGetData struct {
@@ -16,6 +16,8 @@ type goGetData struct {
 }
 
 // GoGet returns a Handler that writes data for the go tool to find code using go get
+//
+// Note that go requires "https://{{host}}/" to work
 func GoGet(host string) http.Handler {
 	t := template.Must(template.New("").Parse(goGetTpl))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
