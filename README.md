@@ -16,9 +16,17 @@ Additional `http.Handler` types
 
 Better request routing
 
-## Package `mux/git`
+### `mux/acme/Thumbprint`
 
-Server routes for git using `github.com/AaronO/go-git-http`
+Server Route for ACME stateless challenge
+
+### `mux/git/Path`
+
+Server Route to provide git over https using `github.com/AaronO/go-git-http`
+
+### `mux/goget/Domain`
+
+Server Route for go tool, provides data to map source onto this domain
 
 ## Package `sessions`
 
