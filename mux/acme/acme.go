@@ -7,8 +7,8 @@ import (
 	"ztaylor.me/http/router"
 )
 
-// Path creates a new *mux.Route for the given file system path to use for stateless ACME challenges on route "/.well-known/acme-challenge/"
-func Path(thumbprint string) *mux.Route {
+// Thumbprint creates a new *mux.Route for the given file system path to use for stateless ACME challenges on route "/.well-known/acme-challenge/"
+func Thumbprint(thumbprint string) *mux.Route {
 	lencut := 28 // len("/.well-known/acme-challenge/")
 	addthumb := "." + thumbprint
 	return &mux.Route{
