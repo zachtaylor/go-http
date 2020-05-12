@@ -9,6 +9,6 @@ import (
 // UpgradeHandler provides a websocket handshake func
 func UpgradeHandler(s Service) http.Handler {
 	return websocket.Handler(func(c *Conn) {
-		s.Connect(c)
+		s.Conn(c)
 	})
 }

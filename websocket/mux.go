@@ -19,6 +19,19 @@ type Route struct {
 // Mux is slice of Route
 type Mux []*Route
 
+// Add is shorthand for Plugin
+func (mux *Mux) Add(m Router, h Handler) {
+	mux.Route(&Route{
+		Handler: h,
+		Router:  m,
+	})
+}
+
+// Route appends a Route to this Mux
+func (mux *Mux) Route(r *Route) {
+	*mux = append(*mux, r)
+}
+
 // ServeWS routes a message
 func (mux Mux) ServeWS(t *T, m *Message) {
 	for _, r := range mux {

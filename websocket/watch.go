@@ -2,22 +2,26 @@ package websocket
 
 import "time"
 
+// heatline tunes what watch considers excessive user input (starts at 0)
+var heatline = 2
+
 var pingTimeout = time.Minute
 
 var lonely []byte = []byte(`{"uri":"/ping"}`)
 
-// watch performs socket i/o and sends when lonely
-func watch(service Service, t *T) {
+// Watch performs socket i/o and sends when lonely
+func Watch(service Service, t *T) {
 	for heat, pingTimer, resetCD := 0, time.NewTimer(pingTimeout), time.Now(); ; {
 		select {
 		case <-pingTimer.C:
-			t.Send(lonely) // falls onto send chan
+			t.Write(lonely) // falls onto send chan
 			pingTimer.Reset(pingTimeout)
 		case buff := <-t.send:
 			if heat > 0 {
 				heat--
 			}
-			if now := time.Now(); now.Sub(resetCD) > time.Second { // pingTimer.Reset on write effect has a 1 sec cooldown
+			// pingTimer.Reset on write effect has a 1 sec cooldown
+			if now := time.Now(); now.Sub(resetCD) > time.Second {
 				if !pingTimer.Stop() {
 					<-pingTimer.C
 				}

@@ -16,17 +16,17 @@ Additional `http.Handler` types
 
 Better request routing
 
-### `mux/acme/Thumbprint`
+### `mux/acme`
 
-Server Route for ACME stateless challenge
+`func Thumbprint` provides server `*Route` for ACME stateless challenge
 
-### `mux/git/Path`
+### `mux/git`
 
-Server Route to provide git over https using `github.com/AaronO/go-git-http`
+`func Path` provides server `*Route` for git client (git over https using `github.com/AaronO/go-git-http`)
 
-### `mux/goget/Domain`
+### `mux/goget`
 
-Server Route for go tool, provides data to map source onto this domain
+`func Domain` provides server `*Route` for go tool, echo meta data linking go code private domain source
 
 ## Package `sessions`
 

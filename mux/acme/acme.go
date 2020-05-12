@@ -15,6 +15,7 @@ func Thumbprint(thumbprint string) *mux.Route {
 		Router: router.PathStarts("/.well-known/acme-challenge"),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if len(r.URL.Path) < lencut {
+				w.Write([]byte("error: path too short"))
 				return
 			}
 			match := r.URL.Path[lencut:]

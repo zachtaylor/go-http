@@ -14,7 +14,7 @@ var Codec = websocket.Message
 
 // T is a websocket connection
 type T struct {
-	ID      string
+	id      string
 	Session *session.T
 	conn    *Conn
 	send    chan []byte
@@ -23,8 +23,9 @@ type T struct {
 }
 
 // New creates an initialied orphan websocket
-func New(conn *Conn) *T {
+func New(id string, conn *Conn) *T {
 	return &T{
+		id:   id,
 		conn: conn,
 		send: make(chan []byte),
 		recv: ReadMessageChan(conn),
@@ -32,8 +33,13 @@ func New(conn *Conn) *T {
 	}
 }
 
+// ID returns the Cache ID of the socket
+func (t *T) ID() string {
+	return t.id
+}
+
 func (t *T) String() string {
-	return "websocket.T{" + t.conn.Request().RemoteAddr + "}"
+	return "websocket.T#" + t.id
 }
 
 // SendChan is a write-only channel used to send data on this websocket
@@ -63,18 +69,18 @@ func (t *T) Close() {
 	}
 }
 
-// Message is a macro for SendMessage(NewMessage)
-func (t *T) Message(uri string, json cast.JSON) {
-	t.SendMessage(NewMessage(uri, json))
+// Send is a macro for Message(NewMessage)
+func (t *T) Send(uri string, json cast.JSON) {
+	t.Message(NewMessage(uri, json))
 }
 
-// SendMessage is a macro for Send(m.json bytes)
-func (t *T) SendMessage(m *Message) {
-	t.Send(cast.BytesS(m.JSON().String()))
+// Message is a macro for Write(m.json bytes)
+func (t *T) Message(m *Message) {
+	t.Write(cast.BytesS(m.JSON().String()))
 }
 
-// Send starts a goroutine to push to send chan
-func (t *T) Send(buff []byte) {
+// Write starts a goroutine to push to send chan
+func (t *T) Write(buff []byte) {
 	go func() {
 		if t.send != nil {
 			t.send <- buff

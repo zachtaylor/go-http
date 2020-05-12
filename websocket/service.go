@@ -1,18 +1,14 @@
 package websocket
 
-import "ztaylor.me/cast"
-
 // Service provides websocket server functionality
 type Service interface {
 	Handler
-	// New connects a websocket
-	Connect(*Conn)
 	// Count returns the number of open sockets
 	Count() int
-	// Message is a macro for SendMessage(NewMessage)
-	Message(string, cast.JSON)
-	// SendMessage calls Write with cast []byte Message.JSON().String()
-	SendMessage(*Message)
-	// Send sends a buffer to all websocket connections
-	Send(s []byte)
+	// Get returns the socket for the given socket id
+	Get(string) *T
+	// Conn merges the current thread (go routine) to monitor the connection
+	Conn(*Conn)
+	// Broadcast sends a message to all connected sockets
+	Broadcast(*Message)
 }
